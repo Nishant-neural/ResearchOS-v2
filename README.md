@@ -1,2 +1,7 @@
-# ResearchOS-v2
-All rights reserved. This project contains proprietary experiments and  discoveries. No one is granted permission to use, copy, modify, or distribute this code or its findings without explicit written consent from the author."
+docker run -d --name qdrant_server `
+  -p 6333:6333 -p 6334:6334 `
+  -v qdrant_data:/qdrant/storage `
+  qdrant/qdrant:latest
+
+
+  docker start qdrant_server
