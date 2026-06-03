@@ -26,6 +26,10 @@ from models import (
     generation_model,
 )
 
+from config import (
+    ENCODER_LAYER_INDEX,
+)
+
 from qdrant_store import (
     create_collections,
     upsert_dense,
@@ -47,13 +51,20 @@ def encode_hidden_states(text):
         generation_model.encoder(
             input_ids=inputs.input_ids,
             attention_mask=inputs.attention_mask,
+            output_hidden_states=True,
+            return_dict=True,
         )
+    )
+    
+    selected_hidden = (
+        encoder_outputs.hidden_states[
+            ENCODER_LAYER_INDEX
+        ]
     )
 
     return {
         "hidden_states": (
-            encoder_outputs
-            .last_hidden_state
+            selected_hidden
             .cpu()
             .numpy()
         ),
@@ -62,6 +73,7 @@ def encode_hidden_states(text):
             .cpu()
             .numpy()
         ),
+        "layer_index": ENCODER_LAYER_INDEX,
     }
 
 
@@ -121,6 +133,9 @@ def ingest_pdf(path):
                     "attention_mask": hidden[
                         "attention_mask"
                     ].tolist(),
+                    "layer_index": hidden[
+                        "layer_index"
+                    ],
                 },
             )
         )

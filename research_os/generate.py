@@ -11,6 +11,10 @@ from models import (
     generation_model,
 )
 
+from config import (
+    ENCODER_LAYER_INDEX,
+)
+
 from qdrant_store import (
     hidden_search,
 )
@@ -86,11 +90,17 @@ def generate_hidden_answer(
         generation_model.encoder(
             input_ids=query_inputs.input_ids,
             attention_mask=query_inputs.attention_mask,
+            output_hidden_states=True,
+            return_dict=True,
         )
     )
 
+    query_hidden = (
+       query_encoder.last_hidden_state
+    )
+
     memory_tensors.append(
-        query_encoder.last_hidden_state
+        query_hidden
     )
 
     memory_masks.append(
@@ -105,7 +115,7 @@ def generate_hidden_answer(
 
         hidden_states = torch.tensor(
             item.payload["hidden_states"]
-        )
+        ).float()
 
         attention_mask = torch.tensor(
             item.payload["attention_mask"]
@@ -132,8 +142,8 @@ def generate_hidden_answer(
     answer_prompt = f"""
     CONTEXT ENDED
 
-    Using the context above,
-    answer yes or no
+    using context,
+   answer the question.
 
     Question:
     {query}
@@ -150,11 +160,17 @@ def generate_hidden_answer(
         generation_model.encoder(
             input_ids=answer_inputs.input_ids,
             attention_mask=answer_inputs.attention_mask,
+            output_hidden_states=True,
+            return_dict=True,
         )
     )
 
-    memory_tensors.append(
+    answer_hidden = (
         answer_encoder.last_hidden_state
+    )
+
+    memory_tensors.append(
+        answer_hidden
     )
 
     memory_masks.append(

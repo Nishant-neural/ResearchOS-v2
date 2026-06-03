@@ -14,4 +14,14 @@ CHUNK_SIZE = 256
 
 CHUNK_OVERLAP = 32
 
-TOP_K = 5
+TOP_K = 2
+
+# -----------------------------------
+# HIDDEN STATE CACHE CONFIG
+# -----------------------------------
+
+# -1 = final encoder layer
+# 0  = embeddings
+# 1..N = encoder block outputs
+
+ENCODER_LAYER_INDEX = 12
