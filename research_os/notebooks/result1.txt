@@ -1,0 +1,13 @@
+question - Why does this architecture avoid repeated encoder computation?
+answer baseline- precompute encoder hidden states
+
+answer precisely framing
+answer hidden state - A Hidden-State Alternative to Traditional RAG Systems(with proper query framing and mentioning when context begins and ends)
+answer hidden state - The encoder is a persistent semantic computation engine.(with proper query framing and mentioning when latent memory begins and ends)
+
+answer hidden state(answer in your own words ) 
+The encoder is a persistent semantic computation engine.
+The encoder is a persistent semantic computation engine.(using the context above, explain why)
+The encoder is a persistent semantic computation engine.(explain main idea)
+no(when answer precisely replaced with answer yes or no)
+chunks used 2

@@ -2,6 +2,10 @@
 
 import torch
 
+from transformers.modeling_outputs import (
+    BaseModelOutput,
+)
+
 from models import (
     tokenizer,
     generation_model,
@@ -62,15 +66,19 @@ def generate_hidden_answer(
 
     memory_masks = []
 
-    query_prompt = f"""
+    # -----------------------------------
+    # QUERY FRAMING
+    # -----------------------------------
+
+    query_prefix = f"""
     QUESTION:
     {query}
 
-    RELEVANT LATENT MEMORY BEGINS
+    CONTEXT BEGINS
     """
 
     query_inputs = tokenizer(
-        query_prompt,
+        query_prefix,
         return_tensors="pt",
     )
 
@@ -89,23 +97,73 @@ def generate_hidden_answer(
         query_inputs.attention_mask
     )
 
+    # -----------------------------------
+    # CACHED MEMORY
+    # -----------------------------------
+
     for item in retrieved:
 
+        hidden_states = torch.tensor(
+            item.payload["hidden_states"]
+        )
+
+        attention_mask = torch.tensor(
+            item.payload["attention_mask"]
+        )
+
+        if hidden_states.dim() == 2:
+            hidden_states = hidden_states.unsqueeze(0)
+
+        if attention_mask.dim() == 1:
+            attention_mask = attention_mask.unsqueeze(0)
+
         memory_tensors.append(
-            torch.tensor(
-                item.payload[
-                    "hidden_states"
-                ]
-            )
+            hidden_states
         )
 
         memory_masks.append(
-            torch.tensor(
-                item.payload[
-                    "attention_mask"
-                ]
-            )
+            attention_mask
         )
+
+    # -----------------------------------
+    # ANSWER INSTRUCTION
+    # -----------------------------------
+
+    answer_prompt = f"""
+    CONTEXT ENDED
+
+    Using the context above,
+    answer yes or no
+
+    Question:
+    {query}
+
+    Answer:
+    """
+
+    answer_inputs = tokenizer(
+        answer_prompt,
+        return_tensors="pt",
+    )
+
+    answer_encoder = (
+        generation_model.encoder(
+            input_ids=answer_inputs.input_ids,
+            attention_mask=answer_inputs.attention_mask,
+        )
+    )
+
+    memory_tensors.append(
+        answer_encoder.last_hidden_state
+    )
+
+    memory_masks.append(
+        answer_inputs.attention_mask
+    )
+
+    # -----------------------------------
+    # CONCAT ALL LATENT STATES
+    # -----------------------------------
 
     memory = torch.cat(
         memory_tensors,
@@ -117,20 +175,17 @@ def generate_hidden_answer(
         dim=1,
     )
 
-    decoder_input_ids = tokenizer(
-        f"""
-        RELEVANT LATENT MEMORY ENDED
+    encoder_outputs = BaseModelOutput(
+        last_hidden_state=memory
+    )
 
-        Answer precisely:
-        {query}
-        """,
-        return_tensors="pt",
-    ).input_ids
+    # -----------------------------------
+    # GENERATION
+    # -----------------------------------
 
     outputs = generation_model.generate(
-        encoder_outputs=(memory,),
+        encoder_outputs=encoder_outputs,
         attention_mask=attention_mask,
-        decoder_input_ids=decoder_input_ids,
         max_new_tokens=128,
     )
 

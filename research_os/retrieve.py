@@ -1,4 +1,4 @@
-# retrieve.py
+#retrieve.py
 
 from rank_bm25 import BM25Okapi
 
@@ -22,7 +22,7 @@ class HybridRetriever:
         self.chunks = chunks
 
         tokenized = [
-            c.split()
+            c["text"].split()
             for c in chunks
         ]
 
@@ -33,7 +33,7 @@ class HybridRetriever:
     def retrieve(
         self,
         query,
-        top_k=5,
+        top_k=2,
     ):
 
         query_embedding = (
@@ -48,21 +48,37 @@ class HybridRetriever:
             limit=top_k * 2,
         )
 
-        dense_chunks = [
-            r.payload["text"]
-            for r in dense_results
-        ]
+        candidates = []
+
+        for r in dense_results:
+
+            candidates.append({
+                "id": r.id,
+                "text": r.payload["text"],
+            })
 
         self.build_bm25(
-            dense_chunks
+            candidates
         )
 
-        bm25_results = (
+        bm25_texts = (
             self.bm25.get_top_n(
                 query.split(),
-                dense_chunks,
+                [c["text"] for c in candidates],
                 n=top_k,
             )
         )
 
-        return bm25_results
+        final = []
+
+        for text in bm25_texts:
+
+            for candidate in candidates:
+
+                if candidate["text"] == text:
+
+                    final.append(candidate)
+
+                    break
+
+        return final
