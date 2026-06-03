@@ -9,7 +9,7 @@ from generate import (
 retriever = HybridRetriever()
 
 results = retriever.retrieve(
-    "Why does this architecture avoid repeated encoder computation?"
+    "How does neuron stars form?"
 )
 
 ids = [
@@ -18,7 +18,7 @@ ids = [
 ]
 
 answer = generate_hidden_answer(
-    "Why does this architecture avoid repeated encoder computation?",
+    "How does neuron stars form?",
     ids,
 )
 

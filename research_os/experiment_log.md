@@ -1,838 +1,551 @@
-# Persistent Encoder Memory Experiment Log
+# Persistent Neural Memory — Current Experimental Context Summary
 
-This log tracks observed behavior of the hidden-state memory pipeline across
-different test conditions. It is meant to preserve research signal, not just
-software status.
+## Core Architecture
 
-## Current System Status
+Research direction:
 
-- The API pipeline works end to end.
-- PDFs can be uploaded, chunked, embedded, and stored in Qdrant.
-- FLAN-T5 encoder hidden states are precomputed and stored for chunks.
-- Hidden-state retrieval can load cached encoder states and attention masks.
-- The decoder can generate from cached hidden states using framed latent memory.
-- Source filename filtering is available for per-paper evaluation.
-- Retrieval previews are recorded in evaluation outputs.
+Persistent neural memory using cached encoder hidden states instead of traditional text-based RAG.
 
-## Core Observations So Far
-
-### 1. Pipeline Works Mechanically
-
-Evidence:
-
-- `hidden_states_used=true`
-- `hidden_chunks_used > 0`
-- hidden-state endpoint returns generated answers without server errors
-
-Interpretation:
-
-The stored encoder states are usable by the FLAN-T5 decoder. The decoder is not
-receiving random noise; it can condition on the cached latent memory.
-
-### 2. Hidden States Preserve Source Information
-
-Evidence:
-
-- On real papers, hidden-state answers often reproduce phrases close to the
-  retrieved paper text.
-- Examples include source-like phrases such as Transformer/RAG/BERT paper
-  definitions and method descriptions.
-
-Interpretation:
-
-Persistent encoder memory preserves enough lexical and semantic information for
-the decoder to reconstruct source-like text from latent states.
-
-Current label:
-
-- Latent source reconstruction
-- Latent extractive QA behavior
-
-### 3. README Toy Test Showed Stronger Semantic Behavior
-
-Condition:
-
-- The uploaded "paper" was the project README.
-- Text was clean, coherent, sectioned, and conceptually focused.
-- Chunks were less noisy than real PDF chunks.
-
-Observed behavior:
-
-- Hidden-state answers captured the main thesis:
-  - semantic understanding should become persistent
-  - contextual semantic computation can be stored
-  - the encoder runs once during ingestion instead of every query
-
-Interpretation:
-
-With clean chunks, cached hidden states showed more semantic, thesis-level
-answering. This suggests chunk quality strongly affects latent-memory quality.
-
-### 4. Real-Paper Tests Exposed Retrieval And Chunking Weaknesses
-
-Condition:
-
-- Three real PDFs were uploaded:
-  - `paper1.pdf`: Attention Is All You Need
-  - `paper2.pdf`: BERT
-  - `paper3.pdf`: RAG
-
-Observed behavior:
-
-- Retrieval initially mixed papers until `source_filename` filtering was added.
-- Retrieval pulled references, acknowledgements, tables, and unrelated fragments.
-- A retrieval-time noise filter improved reference pollution.
-- Even after filtering, many retrieved chunks were related but not answer-specific.
-
-Interpretation:
-
-The hidden-state method is currently bottlenecked by ingestion and retrieval
-quality. Bad chunks produce bad latent memory.
-
-### 5. Query-Conditioned Abstraction Is Still Weak
-
-Evidence:
-
-- Hidden-state answers sometimes repeat broad source statements instead of
-  answering the exact question.
-- Similar retrieved chunks can produce similar answers for different queries.
-- The decoder often extracts or reconstructs rather than synthesizes.
-
-Interpretation:
-
-The model can read cached latent states, but the current conditioning method does
-not yet reliably force query-specific abstraction.
-
-Current label:
-
-- Query signal is weaker than latent memory signal.
-
-### 6. Framed Latent Memory Improved Behavior
-
-Change:
-
-The hidden-state generation path was changed from:
+Pipeline:
 
 ```text
-[query instruction states]
-[cached chunk states]
+offline encoding
+→ hidden-state storage
+→ latent retrieval
+→ decoder conditioning
 ```
 
-to:
+Model:
 
 ```text
-[question + "Relevant latent memory begins"]
-[cached chunk states]
-["Relevant latent memory ended" + repeated question + answer instruction]
+FLAN-T5-base
 ```
 
-Observed behavior:
+Storage:
 
-- Reduced generic thesis repetition on the README test.
-- Improved directness for some answers.
-- Did not fully solve extractive behavior on noisy real-paper chunks.
+```text
+Qdrant
+```
+
+Memory representation:
+
+```text
+final encoder hidden states
+```
+
+Generation method:
+
+```text
+decoder cross-attention over concatenated latent memories
+```
+
+---
+
+# Major Verified Findings
+
+## 1. Hidden-State Reuse Works
+
+The central hypothesis is now strongly supported mechanically.
+
+Verified:
+
+* encoder hidden states can be serialized
+* stored externally
+* retrieved later
+* concatenated dynamically
+* directly reused for generation
+
+without rerunning the encoder.
+
+The decoder can generate coherent outputs from retrieved latent memories.
+
+This alone establishes that encoder hidden states can function as reusable semantic memory artifacts.
+
+---
+
+# 2. Final Encoder Layer Is Special
+
+Controlled layer experiments showed:
+
+```text
+Layer 6  -> repetitive degeneration
+Layer 11 -> repetitive degeneration
+Layer 12 -> coherent generation
+```
+
+Verification:
+
+```text
+hidden_states[12] == last_hidden_state
+```
+
+Mean difference:
+
+```text
+0
+```
 
 Interpretation:
 
-Explicit latent separators help, but do not replace the need for cleaner chunks
-and better retrieval.
+Intermediate layers contain information but are not decoder-readable directly.
 
-## Current Research Interpretation
-
-The strongest current claim is:
-
-> Cached encoder hidden states can act as reusable latent source memory.
-
-The project has not yet proven:
-
-> Cached encoder hidden states reliably support high-quality query-conditioned
-> reasoning over noisy research PDFs.
-
-Current progress summary:
-
-- Pipeline works.
-- Hidden states preserve source information.
-- Decoder can reconstruct from latent states.
-- README test showed promising semantic behavior with clean chunks.
-- Real-paper tests show output is often extractive/copy-like.
-- Query-conditioned abstraction is still weak.
-- Retrieval and chunk quality are the main bottlenecks.
-
-## Working Hypotheses
-
-### H1: Chunk Quality Controls Latent Memory Quality
-
-Clean coherent chunks produce more useful latent memories. Noisy PDF chunks
-produce noisy latent memories and extractive/citation-like outputs.
-
-### H2: Dense Retrieval Alone Is Not Enough
-
-Technical paper QA needs exact term matching and section targeting. Dense vector
-retrieval alone often retrieves related but non-answer chunks.
-
-Likely fix:
-
-- hybrid dense + keyword retrieval
-- section-aware filtering
-- reranking
-
-### H3: Hidden-State Generation Needs Strong Query Framing
-
-The decoder needs explicit latent boundaries and repeated query signal to avoid
-generic reconstruction.
-
-Tested strategy:
-
-- `framed_memory`
-
-Future strategies:
-
-- query repeated before and after memory
-- answer-type-specific instructions
-- learned separator embeddings
-- memory compression with query-aware adapter
-
-## Next Experiments
-
-### Experiment A: Clean Chunk Benchmark
-
-Create a small hand-cleaned corpus from the three papers:
-
-- 5-10 short clean chunks per paper
-- no references
-- no tables
-- no broken equations
-- one idea per chunk
-
-Goal:
-
-Test whether hidden-state memory behaves more semantically when chunk quality is
-controlled.
-
-### Experiment B: Retrieval Quality Audit
-
-For every query, record:
-
-- retrieved chunk ids
-- retrieved text previews
-- whether the answer is present in retrieved chunks
-- whether the answer came from references/noise
-
-Goal:
-
-Separate retrieval failure from hidden-state generation failure.
-
-### Experiment C: Copy/Extractiveness Measurement
-
-Compute overlap between generated answer and retrieved text.
-
-Possible metric:
-
-- longest common substring
-- n-gram overlap
-- answer tokens present in retrieved chunks
-
-Goal:
-
-Distinguish:
-
-- extractive latent reconstruction
-- paraphrased semantic answering
-- unsupported hallucination
-
-### Experiment D: Hybrid Retrieval
-
-Combine:
-
-- dense vector retrieval
-- BM25/keyword scoring
-- source filename filtering
-- reference/noise filtering
-
-Goal:
-
-Improve answer-specific evidence selection before judging hidden-state memory.
-
-## Notes For Future Interpretation
-
-Do not evaluate the hidden-state hypothesis from raw answer quality alone unless
-retrieval previews show that the correct evidence was retrieved.
-
-A bad answer can come from:
-
-- bad PDF extraction
-- bad chunking
-- wrong retrieval
-- noisy references
-- weak query conditioning
-- FLAN-T5-base limitations
-- hidden-state memory limitations
-
-The experiment must isolate these failure modes before making claims about the
-architecture.
-
-
-# Major Mistake
-tokenizer was word based chunk size wa slimited to 512 tokens but due to wrong tokenizer they grew to near or more than 1000 tokens .chunks were often so large as to cover 3- 4 pages in a pdf of reseatrch papers so it added many sections and concepts in latent states creating a semantic soup causing major drift in answers where answers were near semantically but not accurate whereas in my architecture readme ( current readme pdf) as it was semantically good and coherent with repeated topics the generation was not severley affectd but in research pdf due to so large context size both in baseline and hidden state(often larger than 1500) generation drifted leading to catastrophic breakdown in baseline and hidden sates performing semantic drift repeatedly.
-
-this was the summary due to repeated research with the major mistake.
-# ResearchOS Debugging Summary — Persistent Encoder Memory Experiments
-
-## Project
-
-ResearchOS is experimenting with a hidden-state alternative to RAG:
-
-Instead of:
-
-text retrieval → encoder forward pass → decoder
-
-the system performs:
-
-offline encoder hidden-state extraction → hidden-state storage → latent retrieval → decoder cross-attention over stored latent memories.
-
-Main architecture:
-
-* FLAN-T5-base
-* Qdrant
-* Hybrid retrieval (semantic + keyword)
-* Reranking
-* Hidden-state storage in Qdrant payloads
-
-Goal:
-Test whether encoder hidden states can function as reusable semantic memory.
-
----
-
-# Major Discovery
-
-The core hidden-state hypothesis is NOT disproven.
-
-Early experiments on a semantically coherent architecture document worked surprisingly well:
-
-* hidden-state answers were coherent
-* semantically grounded
-* often competitive with or better than baseline RAG
-
-This strongly suggests:
-
-* latent semantic information survives reuse
-* decoder can condition on stored encoder hidden states
-* synthetic encoder sequences are not catastrophically broken
-
-Main failures now appear to be:
-
-* chunking quality
-* retrieval granularity
-* prompt truncation
-* semantic contamination
-* oversized latent memory sequences
-
-NOT:
-
-* impossibility of hidden-state reuse.
-
----
-
-# Important Bugs Already Fixed
-
-## 1. Keyword Retrieval Hidden-State Bug
-
-Problem:
-Keyword-retrieved chunks were logged as retrieved but their hidden states were never loaded from Qdrant.
-
-Effect:
-Baseline used:
-
-* semantic + keyword chunks
-
-Hidden-state pipeline used:
-
-* mostly semantic chunks only
-
-Fix:
-Keyword retrieval branch now fetches full Qdrant payloads and loads:
-
-* hidden_state_full
-* hidden_state_attention_mask
-
-Result:
-Both pipelines now truly use the same retrieved chunks.
-
----
-
-## 2. Baseline Decoding Regression
-
-Problem:
-Baseline generation used weak greedy decoding:
-
-model.generate(max_new_tokens=256)
-
-Fix:
-Changed to:
-
-* beam search
-* early stopping
-* no_repeat_ngram
-
-This improved baseline stability.
-
----
-
-## 3. Rerank Alignment Validation
-
-Potential concern:
-rerank results might not align with original chunk-memory mapping.
-
-Debug validation added:
-RERANKED TEXT vs MATCHED ORIGINAL
-
-Result:
-They match correctly.
-
-Conclusion:
-Retrieval-memory alignment is NOT the main issue anymore.
-
----
-
-# Major Current Findings
-
-## 1. Prompt Truncation is Severe
-
-Debug logs show:
-
-Prompt tokens: 768
-
-EVERY query.
-
-Prompts are being hard-truncated.
-
-Evidence:
-Printed prompts begin mid-sentence:
-
-* "glish-to-German..."
-* "sure, but improves..."
-* etc.
-
-Meaning:
-The FRONT of the prompt is being chopped off.
-
-Potentially losing:
-
-* instruction header
-* user question
-* important earlier chunk sections
-
-This severely hurts baseline RAG.
-
----
-
-## 2. Chunk Sizes Are FAR Too Large
-
-Current chunks are enormous:
-
-* ~600–800 tokens each
-
-Examples:
-Hidden-state aggregation logs:
-
-* [754, 768]
-* [812, 768]
-* final latent memory ~1500 tokens
-
-This creates:
-
-* multi-topic chunks
-* semantic contamination
-* unstable latent composition
-
----
-
-## 3. Retrieval Quality is Bad for Technical QA
-
-Wrong chunks repeatedly retrieved for unrelated questions.
-
-Example:
-Question:
-"What core idea replaces recurrence?"
-
-Retrieved:
-
-* embedding weight-sharing chunk
-* WMT results chunk
-
-Correct chunk should contain:
-"self-attention replaces recurrence"
-
-So generation often never had a chance.
-
----
-
-## 4. Chunk Semantic Contamination is the Main Bottleneck
-
-README/architecture document worked well despite large chunks because:
-
-* entire document lived in one semantic neighborhood
-* repeated same concepts:
-
-  * latent memory
-  * hidden states
-  * semantic reuse
-  * decoder conditioning
-
-Transformer paper is different:
-single chunk may contain:
-
-* formulas
-* training details
-* BLEU scores
-* attention math
-* decoder architecture
-
-This creates semantic interference.
+The final encoder block appears to produce a specialized decoder-interface representation.
 
 Key insight:
-Hidden-state memory appears MUCH more sensitive to chunk purity than standard text RAG.
+
+```text
+information-bearing
+≠
+decoder-consumable
+```
+
+Current hypothesis:
+
+The final encoder layer acts as a latent interface protocol between encoder and decoder.
 
 ---
 
-# Important Architectural Insight
+# 3. Earlier Experiments Were Affected By Major Chunking Bug
 
-Synthetic encoder sequences are NOT fully broken.
+Important bug discovered:
 
-If they were:
+Chunking was accidentally word-based instead of tokenizer-based.
 
-* outputs would be incoherent nonsense.
+Expected:
 
-Instead outputs are:
-
-* fluent
-* semantically nearby
-* context-related
-
-Problem now is mostly:
-
-* semantic drift
-* contaminated latent chunks
-* oversized latent sequences
-
-not total latent failure.
-
----
-
-# Current Recommended Next Steps
-
-## Highest Priority — Rechunk Entire Corpus
-
-Current chunking is likely the biggest systems issue.
-
-Recommended:
-
-* chunk_size = 150–220 tokens
-* overlap = 40–60
-
-Goal:
-Create semantically pure chunks.
-
----
-
-## Next Important Experiment — Top-1 Latent Only
-
-Disable multi-chunk latent concatenation.
-
-Test:
-top_k = 1
-
-Purpose:
-Determine whether:
-
-* single latent chunk works well
-  but
-* multi-chunk latent composition destabilizes decoding.
-
----
-
-## Additional Recommendations
-
-### 1. Chunk Purity Audit
-
-Inspect chunks manually.
-
-Avoid chunks containing:
-
-* multiple sections
-* multiple unrelated concepts
-* training + architecture + formulas mixed together
-
----
-
-### 2. Keep Retrieval Limits Small
-
-2 chunks maximum for now.
-
----
-
-### 3. Larger Models Later
-
-FLAN-T5-base is probably weak for latent conditioning.
-
-But scaling model size should happen AFTER fixing chunking.
-
-Otherwise compute gets wasted fighting systems issues.
-
----
-
-# Final Current Diagnosis
-
-The project has progressed beyond:
-"Can hidden states work at all?"
-
-Current bottlenecks are now:
-
-* retrieval granularity
-* semantic chunk purity
-* latent memory composition
-* prompt truncation
-* oversized latent contexts
-
-Most evidence now supports:
-
-Hidden-state reuse is probably viable,
-but requires much cleaner semantic segmentation than traditional RAG systems.
-
-
-Updated Major Discovery
-Hidden-State Reuse Remains Valid
-
-Subsequent debugging and controlled experiments strengthen the original hidden-state hypothesis rather than weaken it.
-
-Evidence:
-
-Cached final encoder hidden states can be serialized and stored.
-Hidden states can be retrieved later and reused without rerunning the encoder.
-Decoder generation remains coherent when conditioned on retrieved latent memories.
-Final-layer encoder representations can be concatenated and consumed directly by the decoder.
-Outputs remain fluent even under heavy latent-memory loading.
-
-Interpretation:
-
-The project has now moved beyond the question:
-
-"Can encoder hidden states be reused?"
-
-Current evidence strongly suggests:
-
-Encoder hidden states can function as reusable semantic memory artifacts.
-
-The primary research question is now:
-
-How much latent memory can be consumed before retrieval precision degrades?
-
-New Major Finding: Chunking Bug Reinterpretation
-Accidental Long-Context Experiment
-
-A major chunking bug was discovered during evaluation.
-
-Original assumption:
-
+```text
 512-token chunks
+```
 
-Actual behavior:
+Actual:
 
-word-based chunking
+```text
+1000–1500+ token chunks
+```
 
-often >1000 tokens
-sometimes 1500+ tokens
+Often spanning:
 
-3–4 research-paper pages per chunk
+```text
+3–4 PDF pages
+```
 
-As a result, individual chunks frequently contained:
+Consequences:
 
-architecture descriptions
-formulas
-experimental results
-ablation studies
-references
-multiple unrelated concepts
+Single chunks contained:
 
-inside a single latent memory artifact.
+* formulas
+* references
+* methods
+* results
+* multiple concepts
+* unrelated semantic regions
 
-Observed Failure Mode
+This created severe semantic contamination.
 
-Despite extremely oversized chunks:
+---
 
-generation remained grammatical
-generation remained coherent
-generation remained topic-relevant
+# 4. Reinterpretation Of Earlier Results
 
-Observed errors were primarily:
+Initially many failures were attributed to hidden-state limitations.
 
-semantic drift
-answer imprecision
-nearby-concept substitution
-retrieval-style confusion
+Current evidence suggests most degradation came from:
 
-The system rarely produced:
-
-incoherent outputs
-repetitive gibberish
-decoder collapse
-
-Interpretation:
-
-The dominant failure mode was not latent-memory corruption.
-
-Instead:
-
-Attention became diluted across too many concepts stored inside the same latent memory sequence.
-
-This resembles long-context failure modes observed in large language models.
-
-Revised Interpretation of Earlier Results
-
-Many earlier failures previously attributed to hidden-state limitations must now be reconsidered.
-
-What appeared to be:
-
-hidden-state weakness
-
-may actually have been:
-
-semantic contamination
-
+```text
+oversized chunks
 +
-oversized chunking
-
+semantic contamination
 +
 attention dilution
+```
 
-+
-retrieval imprecision
+NOT from hidden-state reuse itself.
 
-The README benchmark performed better because:
+Important observation:
 
-concepts were highly coherent
-terminology was repeated throughout the document
-semantic neighborhoods overlapped heavily
+Even with extremely oversized latent memories:
 
-Research papers behaved worse because large chunks mixed many unrelated concepts into a single latent memory.
+outputs remained:
 
-New Architectural Insight
-Attention Allocation Appears To Be The Bottleneck
+* grammatical
+* coherent
+* semantically related
+
+Failures were usually:
+
+* semantic drift
+* nearby concept substitution
+* generalized summarization
+
+NOT decoder collapse.
+
+This is critical evidence that latent memory itself remains usable under heavy load.
+
+---
+
+# 5. Attention Allocation Appears To Be The Main Bottleneck
 
 Current evidence suggests:
 
 Storage bottleneck:
 
+```text
 No evidence.
+```
 
-Latent-memory preservation bottleneck:
+Latent-memory corruption bottleneck:
 
+```text
 No evidence.
+```
 
 Decoder compatibility bottleneck:
 
+```text
 Solved for final encoder layer.
+```
 
-Attention allocation bottleneck:
+Main bottleneck now appears to be:
 
-Strong evidence.
+```text
+decoder attention allocation
+```
 
-Observed behavior is consistent with:
+Key observation:
+
+```text
+more latent memory
+≠
+nonsense
 
 more latent memory
-    ≠
-decoder failure
+→
+semantic drift
+```
 
-more latent memory
-    →
-reduced retrieval precision
+This resembles long-context attention degradation in transformers.
 
-The decoder appears capable of consuming large latent memories, but struggles to isolate the most relevant information when too many concepts compete for attention.
+---
 
-Layer Experiment Results
-Final Encoder Layer Is Special
+# 6. README Experiments Showed Stable Semantic Behavior
 
-Controlled experiments tested cached encoder states from different layers.
+README collection:
 
-Results:
+```text
+12 chunks total
+```
 
-Layer 6  -> repetitive degeneration
-Layer 11 -> repetitive degeneration
-Layer 12 -> coherent generation
-No memory -> coherent generation
+Experiments:
 
-Verification:
+```text
+top_k = 2 → stable answer
+top_k = 5 → stable answer
+top_k = 10 → stable answer
+top_k = 12 → semantic abstraction drift
+```
 
-hidden_states[12]
-==
-last_hidden_state
+Observed final answer at full-memory load:
 
-Mean difference:
-
-0
+```text
+Latent semantic memory is a semantic computation artifact that can be reused and reused.
+```
 
 Interpretation:
 
-Information may exist throughout the encoder stack.
+As latent memory size increased, the decoder transitioned from:
 
-However:
+```text
+query-conditioned retrieval
+```
 
-Decoder-readable memory emerges only at the final encoder representation.
+toward:
 
-The final encoder block appears to produce a specialized decoder-interface representation.
+```text
+global semantic averaging
+```
 
-This suggests:
+This suggests a latent-memory phase transition.
 
-information-bearing
-≠
-decoder-consumable
+---
 
-Intermediate encoder layers likely require learned alignment before direct reuse.
+# 7. Synthetic Semantic Interference Corpus Introduced New Failure Modes
 
-New Working Hypothesis
+A synthetic multi-domain interference corpus was created containing:
 
-Previous hypothesis:
+* astrophysics
+* psychology
+* economics
+* Roman engineering
+* quantum computing
+* music theory
+* distributed systems
+* etc.
 
-Hidden-state reuse may be limited by representation quality.
+Purpose:
 
-Current hypothesis:
+Controlled semantic interference testing.
 
-Persistent neural memory using cached final encoder hidden states is feasible. The primary limitation is decoder attention capacity and memory-selection precision rather than memory storage itself.
+This corpus produced fundamentally different behavior from research PDFs.
 
-Current research focus:
+---
 
-latent-memory scaling
-attention dilution limits
-memory compression
-memory pooling
-memory merging
-memory routing
-decoder consumption capacity
-New Highest-Priority Experiment
-Decoder Consumption Capacity Benchmark
+# 8. Discovery Of Semantic Superposition Effects
 
-Hold retrieval quality constant.
+Example experiment:
 
-Ensure answer-bearing chunk is always present.
+Question:
 
-Measure performance as latent memory size increases:
+```text
+How does neutron star form?
+```
 
-1 chunk
-2 chunks
-4 chunks
-8 chunks
-16 chunks
+Results:
 
-Goal:
+```text
+2 chunks → "fusion"
+```
 
-Determine whether degradation follows:
+instead of:
 
-token count
-concept count
-latent sequence length
-attention competition
+```text
+after supernova explosions
+```
 
-This experiment directly tests the current central hypothesis:
+Interpretation:
 
-Persistent neural memory is feasible; decoder consumption capacity is the true scaling bottleneck.
+The decoder retrieved the correct semantic domain:
 
+```text
+astrophysics
+```
+
+but failed to preserve exact relational bindings.
+
+This suggests latent memories preserve:
+
+```text
+semantic fields
+```
+
+better than:
+
+```text
+precise symbolic relations
+```
+
+---
+
+# 9. Discovery Of Beam Search Collapse
+
+Important observation:
+
+With 3–4 semantically distant chunks:
+
+beam search sometimes generated:
+
+```text
+"."
+```
+
+Debugging showed:
+
+* hidden states numerically healthy
+* attention masks correct
+* no NaNs
+* no tensor corruption
+
+Debug statistics:
+
+```text
+hidden_states.std() ≈ 0.14
+max abs value ≈ 0.9
+```
+
+This proved the failure was NOT caused by implementation bugs.
+
+---
+
+# 10. Sampling Revealed Decoder Was Still Functional
+
+When beam search was disabled:
+
+same latent memory produced coherent outputs.
+
+Example:
+
+```text
+a system of atoms interacting with each other
+```
+
+Interpretation:
+
+The decoder retained semantic signal.
+
+Beam search was collapsing under:
+
+```text
+high semantic uncertainty
+```
+
+rather than latent corruption.
+
+Key insight:
+
+Latent memory retrieval appears to produce:
+
+```text
+distributed semantic activation
+```
+
+rather than explicit token-level evidence.
+
+Beam search handles this poorly because probability distributions become flatter and more ambiguous.
+
+---
+
+# 11. Emerging Theory — Latent Semantic Superposition
+
+Current evidence increasingly supports:
+
+```text
+decoder cross-attention over latent memories
+=
+semantic field composition
+```
+
+rather than traditional retrieval.
+
+Observed phenomena now fit one unified framework:
+
+| Observation            | Interpretation                           |
+| ---------------------- | ---------------------------------------- |
+| semantic drift         | blended semantic attractors              |
+| global summarization   | semantic averaging                       |
+| beam collapse          | uncertainty collapse                     |
+| coherent weird outputs | latent interpolation                     |
+| nearby wrong answers   | semantic nearest-neighbor reconstruction |
+
+---
+
+# 12. Most Important Current Hypothesis
+
+Persistent neural memory is likely feasible.
+
+The primary limitation is probably NOT:
+
+```text
+memory storage
+```
+
+but:
+
+```text
+decoder interpretation capacity
+```
+
+Specifically:
+
+* attention competition
+* semantic interference
+* latent manifold compositionality
+* decoding instability under semantic superposition
+
+---
+
+# Current Most Important Open Questions
+
+## A. Is Semantic Distance The Real Bottleneck?
+
+Hypothesis:
+
+Same-domain latent memories compose stably.
+
+Cross-domain latent memories destabilize decoder interpretation.
+
+Planned experiment:
+
+```text
+same-domain chunks
+vs
+related-domain chunks
+vs
+maximally distant chunks
+```
+
+Measure:
+
+* exact correctness
+* semantic drift
+* abstraction frequency
+* beam collapse frequency
+
+---
+
+# B. Does Cross-Attention Function As A Memory Reader?
+
+Emerging hypothesis:
+
+```text
+cross-attention
+=
+latent memory retrieval mechanism
+```
+
+with finite semantic precision.
+
+---
+
+# C. Is Latent Memory Fundamentally More Semantic Than Symbolic?
+
+Current evidence suggests latent memory may naturally encode:
+
+```text
+distributed semantic manifolds
+```
+
+rather than exact extractive facts.
+
+This may explain:
+
+* semantic smoothing
+* concept blending
+* generalized abstraction
+
+during generation.
+
+---
+
+# Current Recommended Experimental Priorities
+
+1. tokenizer-correct chunking only
+2. chunk_size = 150–256
+3. top_k scaling experiments
+4. same-domain vs cross-domain composition tests
+5. beam vs sampling comparisons
+6. semantic drift categorization
+7. latent manifold compatibility studies
+
+---
+
+# Current Research State
+
+The project has progressed far beyond:
+
+```text
+"Can hidden states work at all?"
+```
+
+Current research question is now closer to:
+
+```text
+"How do decoder cross-attention dynamics behave when externally persisted latent semantic memories are composed together?"
+```
+
+This has become a study of:
+
+* latent memory composition
+* semantic superposition
+* attention allocation
+* manifold compatibility
+* decoder uncertainty dynamics
+
+rather than merely hidden-state reuse.

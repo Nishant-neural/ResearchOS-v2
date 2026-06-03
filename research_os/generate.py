@@ -143,11 +143,11 @@ def generate_hidden_answer(
     CONTEXT ENDED
 
     using context,
-   answer the question.
-
+   answer the question in your own words.
+   
     Question:
     {query}
-
+    
     Answer:
     """
 
@@ -194,6 +194,38 @@ def generate_hidden_answer(
     encoder_outputs = BaseModelOutput(
         last_hidden_state=memory
     )
+    # -----------------------------------
+# GENERATION DEBUG
+# -----------------------------------
+
+    print("\n===== LATENT DEBUG =====")
+
+    print("hidden_states.shape:", memory.shape)
+
+    print("attention_mask.shape:", attention_mask.shape)
+
+    print(
+    "attention_mask.sum():",
+    attention_mask.sum().item()
+)
+
+    print(
+    "hidden_states.mean():",
+    memory.mean().item()
+)
+
+    print(
+    "hidden_states.std():",
+    memory.std().item()
+)
+
+    print(
+    "max abs value:",
+    memory.abs().max().item()
+)
+    print("dtype:", memory.dtype)
+    print("device:", memory.device)
+    print("========================\n")
 
     # -----------------------------------
     # GENERATION
@@ -203,6 +235,9 @@ def generate_hidden_answer(
         encoder_outputs=encoder_outputs,
         attention_mask=attention_mask,
         max_new_tokens=128,
+         do_sample=True,
+        temperature=0.7,
+        top_p=0.9,
     )
 
     return tokenizer.decode(

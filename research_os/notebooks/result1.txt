@@ -16,7 +16,8 @@ intruction - using context answer precisely ,chunks used 5,
 The encoder is a reusable semantic computation artifact.
 chunks used 10(means raw token count is not the bottleneck the amount of concepts is)
 The encoder is a persistent semantic computation engine.
-
+chunks used 12 meaning whole readme
+answer - The architecture proposes: Latent semantic memory is a semantic computation artifact that can be reused and reused.
 
 without any latent memory added   if asked to answer in yes or no does it correctly.
 
@@ -26,3 +27,24 @@ erieserrurerieserrurerieserrurerieserrurerieserrurerieserrurerieserrureri....
 
 output of 12th layer block hidden state is  
 The encoder is a persistent semantic computation engine.
+
+
+chunks used 2,1
+semantic_interference_test_document
+Question - How does neuron  stars form?
+
+baseline - after supernova explosions
+hidden answer - a fusion reaction(asked it to answer precisely in propmt , asked it to answer in own words)
+
+in 3 ,4 chunks hidden state answer - (.) a single dot 
+baseline - supernova explosions.
+repeating query in encoder hidden sate propmt didnt chnage answers.
+
+chunks used 3
+here after disabling beam search 
+answer - a system of atoms interacting with each other.
+chunks used 2
+answer - atomic nuclei
+again reran chunks used 3 answer -(.)
+again reran chunks 3 answer - Using a computer's architecture, it is possible to use a computer's
+ architecture to construct an algorithm for calculating the size of an object.

@@ -150,5 +150,5 @@ def ingest_pdf(path):
 if __name__ == "__main__":
 
     ingest_pdf(
-        "research_os/data/pdfs/paper2.pdf"
+        "research_os/data/pdfs/semantic_interference_test_document.pdf"
     )

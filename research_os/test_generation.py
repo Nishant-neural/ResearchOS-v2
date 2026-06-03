@@ -8,7 +8,7 @@ from generate import (
 retriever = HybridRetriever()
 
 results = retriever.retrieve(
-    "Why does this architecture avoid repeated encoder computation?"
+    "How does neuron stars form?"
 )
 
 chunks = [
@@ -17,7 +17,7 @@ chunks = [
 ]
 
 answer = generate_text_answer(
-    "Why does this architecture avoid repeated encoder computation?",
+    "How does neuron stars form?",
     chunks,
 )
 
