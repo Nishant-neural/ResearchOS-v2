@@ -4,7 +4,7 @@ from retrieve import HybridRetriever
 retriever = HybridRetriever()
 
 results = retriever.retrieve(
-    "What problem does this architecture solve?"
+    "What is the architecture based on?"
 )
 
 print("\nTEXTS:\n")

@@ -347,3 +347,259 @@ device: cpu
 ========================
 
 a space station
+################################################################################################
+
+
+In order to check my semantic field composistion theory i tested it on my readme tetx again
+ because it is semantically coherent and do not have that many concepts earlier astrophysics pdf 
+ has so many scientific technical texts that were very dense with concepts.
+THE QUESTION WAS- WHAT IS THE ARCHITECTURE?
+
+chunks used 2 still added the memory and concatenated to query hidden sate on sequence dimension.
+
+==== MEMORY SUPERPOSITION =====
+
+After cached memory 1
+mean: 0.006150441709905863
+std: 0.16557155549526215
+avg norm: 4.507787227630615
+max abs: 1.0317646265029907
+================================
+
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 304, 768])
+attention_mask.shape: torch.Size([1, 304])
+attention_mask.sum(): 304
+hidden_states.mean(): 0.005420660600066185
+hidden_states.std(): 0.161237433552742
+avg token norm: 4.355165481567383
+max abs value: 1.0317646265029907
+dtype: torch.float32
+device: cpu
+========================
+
+The architecture has a central axis and a focus on the latent state.
+
+
+===== MEMORY SUPERPOSITION =====
+
+After cached memory 1
+mean: 0.006150441709905863
+std: 0.16557155549526215
+avg norm: 4.507787227630615
+max abs: 1.0317646265029907
+================================
+
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 304, 768])
+attention_mask.shape: torch.Size([1, 304])
+attention_mask.sum(): 304
+hidden_states.mean(): 0.005420660600066185
+hidden_states.std(): 0.161237433552742
+avg token norm: 4.355165481567383
+max abs value: 1.0317646265029907
+dtype: torch.float32
+device: cpu
+========================
+
+In the context of a semantic decoder, a hidden state is an object 
+that can be read only in the context of a decoder-only system.
+
+##########################################################################
+FIRST TEST OF ALL ENCODER STATISTICS
+
+===== FRESH TEXT ENCODING =====
+shape: torch.Size([1, 216, 768])
+mean: 0.004373953677713871
+std: 0.14282266795635223
+avg token norm: 3.910337448120117
+max abs: 0.6887326836585999
+========================
+
+
+===== QUERY ENCODER OUTPUT =====
+shape: torch.Size([1, 19, 768])
+mean: 0.0016416586004197598
+std: 0.11967594921588898
+avg token norm: 3.1758079528808594
+max abs: 0.6281540393829346
+========================
+
+
+===== CACHED MEMORY 0 =====
+shape: torch.Size([1, 256, 768])
+mean: 0.005107071716338396
+std: 0.15067410469055176
+avg token norm: 4.111324787139893
+max abs: 0.9400792121887207
+========================
+
+
+===== CACHED MEMORY 1 =====
+shape: torch.Size([1, 256, 768])
+mean: 0.00417347950860858
+std: 0.14817021787166595
+avg token norm: 4.035948276519775
+max abs: 0.9117408394813538
+========================
+
+
+===== MEMORY SUPERPOSITION =====
+
+After cached memory 1
+mean: 0.006150441709905863
+std: 0.16557155549526215
+avg norm: 4.507787227630615
+max abs: 1.0317646265029907
+================================
+
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 304, 768])
+attention_mask.shape: torch.Size([1, 304])
+attention_mask.sum(): 304
+hidden_states.mean(): 0.005420660600066185
+hidden_states.std(): 0.161237433552742
+avg token norm: 4.355165481567383
+max abs value: 1.0317646265029907
+dtype: torch.float32
+device: cpu
+========================
+question - WHat is the ARCHITECTURE?
+answer - The architecture is based on the notion of "latent" information.
+
+
+question- "What is the hypothesis the architecture is based on?
+
+===== FRESH TEXT ENCODING =====
+shape: torch.Size([1, 216, 768])
+mean: 0.004373953677713871
+std: 0.14282266795635223
+avg token norm: 3.910337448120117
+max abs: 0.6887326836585999
+========================
+
+
+===== QUERY ENCODER OUTPUT =====
+shape: torch.Size([1, 25, 768])
+mean: 0.0015848889015614986
+std: 0.12221699953079224
+avg token norm: 3.2309160232543945
+max abs: 0.6323164105415344
+========================
+
+
+===== CACHED MEMORY 0 =====
+shape: torch.Size([1, 256, 768])
+mean: 0.005107071716338396
+std: 0.15067410469055176
+avg token norm: 4.111324787139893
+max abs: 0.9400792121887207
+========================
+
+
+===== CACHED MEMORY 1 =====
+shape: torch.Size([1, 256, 768])
+mean: 0.00417347950860858
+std: 0.14817021787166595
+avg token norm: 4.035948276519775
+max abs: 0.9117408394813538
+========================
+
+
+===== MEMORY SUPERPOSITION =====
+
+After cached memory 1
+mean: 0.006150441709905863
+std: 0.16557155549526215
+avg norm: 4.507787227630615
+max abs: 1.0317646265029907
+================================
+
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 316, 768])
+attention_mask.shape: torch.Size([1, 316])
+attention_mask.sum(): 316
+hidden_states.mean(): 0.005199916195124388
+hidden_states.std(): 0.16004933416843414
+avg token norm: 4.314731121063232
+max abs value: 1.0317646265029907
+dtype: torch.float32
+device: cpu
+========================
+
+The model is based on the idea that the latent state is a semantic representation
+
+PS C:\programming\ResearchOS-v2> & c:/programming/ResearchOS-v2/venv/Scripts/python.exe c:/programming/ResearchOS-v2/research_os/test_hidden_modified.py
+C:\programming\ResearchOS-v2\venv\Lib\site-packages\huggingface_hub\file_download.py:1132: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+  warnings.warn(
+
+===== FRESH TEXT ENCODING =====
+shape: torch.Size([1, 216, 768])
+mean: 0.004373953677713871
+std: 0.14282266795635223
+avg token norm: 3.910337448120117
+max abs: 0.6887326836585999
+========================
+
+
+===== QUERY ENCODER OUTPUT =====
+shape: torch.Size([1, 25, 768])
+mean: 0.0015848889015614986
+std: 0.12221699953079224
+avg token norm: 3.2309160232543945
+max abs: 0.6323164105415344
+========================
+
+
+===== CACHED MEMORY 0 =====
+shape: torch.Size([1, 256, 768])
+mean: 0.005107071716338396
+std: 0.15067410469055176
+avg token norm: 4.111324787139893
+max abs: 0.9400792121887207
+========================
+
+
+===== CACHED MEMORY 1 =====
+shape: torch.Size([1, 256, 768])
+mean: 0.00417347950860858
+std: 0.14817021787166595
+avg token norm: 4.035948276519775
+max abs: 0.9117408394813538
+========================
+
+
+===== MEMORY SUPERPOSITION =====
+
+After cached memory 1
+mean: 0.006150441709905863
+std: 0.16557155549526215
+avg norm: 4.507787227630615
+max abs: 1.0317646265029907
+================================
+
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 316, 768])
+attention_mask.shape: torch.Size([1, 316])
+attention_mask.sum(): 316
+hidden_states.mean(): 0.005199916195124388
+hidden_states.std(): 0.16004933416843414
+avg token norm: 4.314731121063232
+max abs value: 1.0317646265029907
+dtype: torch.float32
+device: cpu
+========================
+
+Latent state
+############################################
+A test to test exact information precision 
+used a question with answer in a single line of text in a para.
+question-What are encoder hidden states hypothesized to be?
+
+exact phrase from text- reusable semantic computation artifacts
+answer - a semantic computation engine

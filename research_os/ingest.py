@@ -151,5 +151,5 @@ def ingest_pdf(path):
 if __name__ == "__main__":
 
     ingest_pdf(
-        "research_os/data/pdfs/astrophysics_chunks.pdf"
+        "research_os/data/pdfs/readme_text.pdf"
     )

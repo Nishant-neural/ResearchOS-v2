@@ -9,7 +9,7 @@ from generate import (
 retriever = HybridRetriever()
 
 results = retriever.retrieve(
-    "What are galaxies?"
+    "What is the architecture?"
 )
 
 ids = [
@@ -18,7 +18,7 @@ ids = [
 ]
 
 answer = generate_hidden_answer(
-    "What are galaxies?",
+    "What is the architecture?",
     ids,
 )
 
