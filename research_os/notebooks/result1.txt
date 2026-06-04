@@ -602,4 +602,6 @@ used a question with answer in a single line of text in a para.
 question-What are encoder hidden states hypothesized to be?
 
 exact phrase from text- reusable semantic computation artifacts
-answer - a semantic computation engine
+answer1 - a semantic computation engine
+asnwer 2 - a method of retrieving text
+answer 3 - encoders 

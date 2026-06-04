@@ -919,3 +919,279 @@ hidden-state superposition
 → exact concept reconstruction degrades
 
 This is presently the strongest empirical evidence obtained in support of the semantic-field interpretation of latent memory representations.
+
+
+Updated Interpretation After Statistical Validation and Proposition Retrieval Experiments
+Major Reassessment
+
+Earlier stages of the project were heavily focused on the question:
+
+Do stored encoder hidden states preserve useful information?
+
+Recent experiments significantly weaken this as the primary concern.
+
+The evidence now strongly suggests:
+
+stored hidden states
+→ retain substantial semantic information
+
+retrieved hidden states
+→ remain decoder-readable
+
+latent memories
+→ survive storage and retrieval with high fidelity
+
+The research question has therefore shifted toward:
+
+Can the decoder reliably recover query-conditioned propositions
+from externally persisted latent memories?
+
+rather than:
+
+Do latent memories contain information at all?
+Statistical Validation Of Hidden-State Persistence
+
+Direct comparisons were performed between:
+
+fresh encoder outputs
+cached hidden states
+superposed hidden states
+final latent memory presented to decoder
+
+Observed statistics:
+
+Fresh encoder output:
+
+std ≈ 0.143
+avg token norm ≈ 3.91
+
+Cached memories:
+
+std ≈ 0.148–0.151
+avg token norm ≈ 4.04–4.11
+
+Memory superposition:
+
+std ≈ 0.166
+avg token norm ≈ 4.51
+
+Final latent passed to decoder:
+
+std ≈ 0.160
+avg token norm ≈ 4.31
+
+Interpretation:
+
+encoder output
+≈
+cached memory
+≈
+superposed memory
+≈
+decoder input
+
+No evidence was observed for:
+
+latent collapse
+activation explosion
+storage corruption
+catastrophic manifold divergence
+
+This is one of the strongest pieces of evidence obtained so far.
+
+The latent memories remain statistically close to naturally generated encoder representations even after retrieval and composition.
+
+Hidden-State Information Preservation Appears Strong
+
+A critical realization emerged from later experiments.
+
+Transformers fundamentally rely on hidden states as the communication channel between encoder and decoder.
+
+If final encoder hidden states did not preserve rich information:
+
+encoder-decoder transformers
+would not function
+
+Furthermore:
+
+latent retrieval repeatedly produces document-specific concepts
+proposition-level information is sometimes recovered
+semantic concepts repeatedly match stored document content
+
+Examples include generations such as:
+
+semantic computation engine
+latent semantic memory
+semantic representation
+
+which are directly related to document content.
+
+This increasingly suggests:
+
+information preservation
+is not the dominant bottleneck
+Proposition Retrieval Is Possible
+
+An important hidden-state evaluation compared traditional retrieval against latent retrieval.
+
+Example:
+
+Question:
+
+What are the advantages?
+
+Retrieved latent memories produced:
+
+The encoder runs once during ingestion instead of every query.
+
+This corresponds closely to an explicit proposition present in the paper.
+
+This result is important because it demonstrates:
+
+document-specific proposition retrieval
+
+rather than merely:
+
+domain-level semantic steering
+
+Therefore the current evidence no longer supports the strong claim that latent memories preserve only vague semantic fields.
+
+Proposition-level information clearly survives at least in some cases.
+
+New Interpretation Of Semantic Drift
+
+Earlier observations were interpreted as:
+
+hidden states preserve semantic fields
+but lose exact concepts
+
+Recent evidence suggests a more nuanced explanation.
+
+Observed behavior:
+
+correct document
+correct domain
+correct conceptual neighborhood
+incorrect proposition selection
+
+Examples:
+
+Question:
+
+What are encoder hidden states hypothesized to be?
+
+Target:
+
+reusable semantic computation artifacts
+
+Generated answers included:
+
+semantic computation engine
+semantic understanding
+encoders
+a method of retrieving text
+
+The outputs repeatedly remain inside the correct semantic region while failing to consistently recover the exact proposition.
+
+This pattern now appears more consistent with:
+
+query-conditioned proposition selection failure
+
+than with:
+
+information absence
+Emerging Decoder Bottleneck Hypothesis
+
+Current evidence increasingly supports:
+
+memory storage
+✓
+
+memory retrieval
+✓
+
+memory persistence
+✓
+
+decoder access to memory
+✓
+
+while leaving open:
+
+query-conditioned memory interpretation
+?
+
+The architecture stores memories that were encoded independently of future queries.
+
+Later, the decoder receives:
+
+query latent
++
+memory latent
+
+and must determine:
+
+which memory regions answer the question
+
+through cross-attention alone.
+
+This differs fundamentally from standard encoder-decoder training where:
+
+query
++
+context
+
+are jointly encoded before decoding begins.
+
+The current working hypothesis is therefore:
+
+the dominant bottleneck may be
+query-conditioned latent interpretation
+rather than hidden-state storage itself
+Revised Bottleneck Ranking
+
+Current ranking of likely limitations:
+
+1. Query-conditioned latent interpretation
+
+2. Decoder training mismatch
+   (decoder never trained to read externally persisted memories)
+
+3. Attention competition across retrieved memories
+
+4. Latent superposition effects
+
+5. Storage/retrieval fidelity
+
+Storage fidelity currently has the weakest evidence as a bottleneck.
+
+Current Working Conclusion
+
+The project has progressed beyond demonstrating hidden-state reuse.
+
+Evidence now strongly supports:
+
+persistent hidden-state storage
+latent retrieval
+decoder consumption of latent memories
+recovery of document-specific concepts
+recovery of some document-specific propositions
+
+The dominant unanswered question is no longer:
+
+Can hidden states function as memory?
+
+but instead:
+
+Can a decoder trained on query-conditioned encoder outputs
+reliably extract query-specific propositions
+from externally persisted latent memories?
+
+This reframes the project from a study of memory persistence into a study of:
+
+latent memory interpretation
+query-conditioned reasoning
+cross-attention memory reading
+and decoder-memory compatibility
+
+which currently appears to be the most important frontier for the architecture.
