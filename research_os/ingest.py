@@ -44,6 +44,7 @@ def encode_hidden_states(text):
         text,
         return_tensors="pt",
         truncation=True,
+        padding="max_length",
         max_length=256,
     )
 
@@ -150,5 +151,5 @@ def ingest_pdf(path):
 if __name__ == "__main__":
 
     ingest_pdf(
-        "research_os/data/pdfs/semantic_interference_test_document.pdf"
+        "research_os/data/pdfs/astrophysics_chunks.pdf"
     )

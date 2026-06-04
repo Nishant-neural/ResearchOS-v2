@@ -48,3 +48,302 @@ answer - atomic nuclei
 again reran chunks used 3 answer -(.)
 again reran chunks 3 answer - Using a computer's architecture, it is possible to use a computer's
  architecture to construct an algorithm for calculating the size of an object.
+
+------------------------------------------------------------
+# POOLING EXPERIMENTS
+
+MEAN POOLED the latent memory vectors on astrophyscis_chunks.pdf which are 5 
+different semantic section on same astrophyscis domain tried smeantic interference pdf and anser was still a.
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 4, 768])
+attention_mask.shape: torch.Size([1, 4])
+attention_mask.sum(): 4
+hidden_states.mean(): 0.0019031396368518472
+hidden_states.std(): 0.0647137314081192
+max abs value: 0.3208353519439697
+dtype: torch.float32
+device: cpu
+========================
+
+asnwer - a
+
+conclusion - too much compression and catastrophic degeneration
+
+----------------------------------------------------------------
+truncated the sequence.
+
+question - What are galaxies?
+
+After memory 1
+mean: 0.0012253622990101576
+std: 0.054429057985544205
+avg norm: 1.5058430433273315
+max abs: 0.4797808825969696
+
+After memory 2
+mean: 0.0021968637593090534
+std: 0.07162529975175858
+avg norm: 1.9810718297958374
+max abs: 0.46482884883880615
+
+After memory 3
+mean: 0.0021242827642709017
+std: 0.08618005365133286
+avg norm: 2.3837833404541016
+max abs: 0.5099332332611084
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 21, 768])
+attention_mask.shape: torch.Size([1, 21])
+attention_mask.sum(): 21
+hidden_states.mean(): 0.0021242827642709017
+hidden_states.std(): 0.08618005365133286
+avg token norm: 2.3837833404541016
+max abs value: 0.5099332332611084
+dtype: torch.float32
+device: cpu
+========================
+
+planetary
+
+
+
+After memory 1
+mean: 0.0012253622990101576
+std: 0.054429057985544205
+avg norm: 1.5058430433273315
+max abs: 0.4797808825969696
+
+After memory 2
+mean: 0.0021968637593090534
+std: 0.07162529975175858
+avg norm: 1.9810718297958374
+max abs: 0.46482884883880615
+
+After memory 3
+mean: 0.0021242827642709017
+std: 0.08618005365133286
+avg norm: 2.3837833404541016
+max abs: 0.5099332332611084
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 21, 768])
+attention_mask.shape: torch.Size([1, 21])
+attention_mask.sum(): 21
+hidden_states.mean(): 0.0021242827642709017
+hidden_states.std(): 0.08618005365133286
+avg token norm: 2.3837833404541016
+max abs value: 0.5099332332611084
+dtype: torch.float32
+device: cpu
+========================
+
+astronomes
+
+
+this was the proper experiment with hidden states added and query framing was left alone .
+
+===== MEMORY SUPERPOSITION =====
+
+After cached memory 1
+mean: 0.003605905920267105
+std: 0.1478550285100937
+avg norm: 4.02717399597168
+max abs: 0.8568775057792664
+================================
+
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 308, 768])
+attention_mask.shape: torch.Size([1, 308])
+attention_mask.sum(): 308
+hidden_states.mean(): 0.003236033720895648
+hidden_states.std(): 0.1469327062368393
+avg token norm: 3.988269329071045
+max abs value: 0.8664174675941467
+dtype: torch.float32
+device: cpu
+========================
+
+.
+
+
+
+===== MEMORY SUPERPOSITION =====
+
+After cached memory 1
+mean: 0.003605905920267105
+std: 0.1478550285100937
+avg norm: 4.02717399597168
+max abs: 0.8568775057792664
+================================
+
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 308, 768])
+attention_mask.shape: torch.Size([1, 308])
+attention_mask.sum(): 308
+hidden_states.mean(): 0.003236033720895648
+hidden_states.std(): 0.1469327062368393
+avg token norm: 3.988269329071045
+max abs value: 0.8664174675941467
+dtype: torch.float32
+device: cpu
+========================
+
+The scientific name for a planet is.
+(venv) PS C:\programming\ResearchOS-v2> & c:/programming/ResearchOS-v2/venv/Scripts/python.exe c:/programming/ResearchOS-v2/research_os/test_hidden.py
+C:\programming\ResearchOS-v2\venv\Lib\site-packages\huggingface_hub\file_download.py:1132: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+  warnings.warn(
+
+===== MEMORY SUPERPOSITION =====
+
+After cached memory 1
+mean: 0.003605905920267105
+std: 0.1478550285100937
+avg norm: 4.02717399597168
+max abs: 0.8568775057792664
+================================
+
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 308, 768])
+attention_mask.shape: torch.Size([1, 308])
+attention_mask.sum(): 308
+hidden_states.mean(): 0.003236033720895648
+hidden_states.std(): 0.1469327062368393
+avg token norm: 3.988269329071045
+max abs value: 0.8664174675941467
+dtype: torch.float32
+device: cpu
+========================
+
+A series of planets orbiting stars, and a variety of other planets in the Solar System.
+
+
+===== MEMORY SUPERPOSITION =====
+
+After cached memory 1
+mean: 0.003605905920267105
+std: 0.1478550285100937
+avg norm: 4.02717399597168
+max abs: 0.8568775057792664
+================================
+
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 308, 768])
+attention_mask.shape: torch.Size([1, 308])
+attention_mask.sum(): 308
+hidden_states.mean(): 0.003236033720895648
+hidden_states.std(): 0.1469327062368393
+avg token norm: 3.988269329071045
+max abs value: 0.8664174675941467
+dtype: torch.float32
+device: cpu
+========================
+
+space
+
+
+===== MEMORY SUPERPOSITION =====
+
+After cached memory 1
+mean: 0.003605905920267105
+std: 0.1478550285100937
+avg norm: 4.02717399597168
+max abs: 0.8568775057792664
+================================
+
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 308, 768])
+attention_mask.shape: torch.Size([1, 308])
+attention_mask.sum(): 308
+hidden_states.mean(): 0.003236033720895648
+hidden_states.std(): 0.1469327062368393
+avg token norm: 3.988269329071045
+max abs value: 0.8664174675941467
+dtype: torch.float32
+device: cpu
+========================
+
+planets
+
+
+
+===== MEMORY SUPERPOSITION =====
+
+After cached memory 1
+mean: 0.003605905920267105
+std: 0.1478550285100937
+avg norm: 4.02717399597168
+max abs: 0.8568775057792664
+================================
+
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 308, 768])
+attention_mask.shape: torch.Size([1, 308])
+attention_mask.sum(): 308
+hidden_states.mean(): 0.003236033720895648
+hidden_states.std(): 0.1469327062368393
+avg token norm: 3.988269329071045
+max abs value: 0.8664174675941467
+dtype: torch.float32
+device: cpu
+========================
+
+A group of planets that orbit the Sun
+
+
+these were the results when no hidden memory was attacthed to tets if model already knew about it.
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 308, 768])
+attention_mask.shape: torch.Size([1, 308])
+attention_mask.sum(): 308
+hidden_states.mean(): 0.00023891683667898178
+hidden_states.std(): 0.05846855789422989
+avg token norm: 0.6410080790519714
+max abs value: 0.8664174675941467
+dtype: torch.float32
+device: cpu
+========================
+
+a group of objects with a similar shape
+PS C:\programming\ResearchOS-v2> & c:/programming/ResearchOS-v2/venv/Scripts/python.exe c:/programming/ResearchOS-v2/research_os/test_hidden.py
+C:\programming\ResearchOS-v2\venv\Lib\site-packages\huggingface_hub\file_download.py:1132: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+  warnings.warn(
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 308, 768])
+attention_mask.shape: torch.Size([1, 308])
+attention_mask.sum(): 308
+hidden_states.mean(): 0.00023891683667898178
+hidden_states.std(): 0.05846855789422989
+avg token norm: 0.6410080790519714
+max abs value: 0.8664174675941467
+dtype: torch.float32
+device: cpu
+========================
+
+a constellation
+PS C:\programming\ResearchOS-v2> & c:/programming/ResearchOS-v2/venv/Scripts/python.exe c:/programming/ResearchOS-v2/research_os/test_hidden.py
+C:\programming\ResearchOS-v2\venv\Lib\site-packages\huggingface_hub\file_download.py:1132: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+  warnings.warn(
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 308, 768])
+attention_mask.shape: torch.Size([1, 308])
+attention_mask.sum(): 308
+hidden_states.mean(): 0.00023891683667898178
+hidden_states.std(): 0.05846855789422989
+avg token norm: 0.6410080790519714
+max abs value: 0.8664174675941467
+dtype: torch.float32
+device: cpu
+========================
+
+a space station

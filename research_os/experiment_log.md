@@ -549,3 +549,373 @@ This has become a study of:
 * decoder uncertainty dynamics
 
 rather than merely hidden-state reuse.
+
+
+Experiment Log — Latent Superposition Test
+
+Initial latent composition used mean pooling over retrieved hidden states. This caused severe latent collapse, producing trivial outputs such as "a" regardless of retrieved document content. Hidden-state statistics showed extremely low activation variance (std ≈ 0.06), suggesting semantic information destruction.
+
+The architecture was then changed from mean pooling to additive latent superposition:
+
+(256,768) + (256,768) -> (256,768)
+
+Instead of concatenation or averaging, retrieved hidden states were directly added together.
+
+Unexpectedly, despite major implementation flaws:
+
+variable-length latent tensors
+truncation to minimum sequence length
+accidental addition of query/instruction hidden states
+no semantic token alignment
+
+the model still produced semantically related outputs.
+
+Example query:
+
+What are galaxies?
+
+Generated outputs:
+
+planetary
+astronomes
+
+Although incorrect, the outputs remained inside the astronomy semantic neighborhood rather than collapsing into meaningless tokens.
+
+Latent statistics also improved substantially:
+
+activation std increased from ~0.06 to ~0.086
+average token norm increased to ~2.38
+
+This suggests additive superposition preserved significantly more semantic structure than mean pooling.
+
+Most importantly:
+
+Even under severe architectural mistakes, latent addition still retained coarse semantic category information.
+
+This is evidence that transformer hidden states may support meaningful semantic field composition rather than behaving purely as symbolic memory representations.
+
+Experiment Log — Latent Superposition vs Decoder Stability
+
+Early latent superposition experiments unexpectedly produced more semantically meaningful outputs despite severe architectural flaws.
+
+The earlier implementation used:
+
+variable-length encoder hidden states
+truncation to minimum overlapping sequence length
+direct addition of query + memory + instruction hidden states
+no proper masking
+partial token overlap only
+
+Example flawed operation:
+
+min_len = min(
+    base_memory.shape[1],
+    memory.shape[1],
+)
+
+base_memory[:, :min_len, :] += (
+    memory[:, :min_len, :]
+)
+
+Despite being mathematically incorrect, outputs remained semantically related to the target domain.
+
+Example:
+
+Question:
+
+What are galaxies?
+
+Generated outputs:
+
+planetary
+astronomes
+
+These outputs were incorrect but remained strongly astronomy-adjacent.
+
+After architectural “fixes” were introduced:
+
+fixed-length padding
+full latent superposition
+proper attention masks
+larger latent sequence composition
+stronger memory accumulation
+
+generation quality unexpectedly became worse.
+
+Outputs collapsed into:
+
+[
+a)
+victim
+
+or other unstable malformed completions.
+
+This suggests a major theoretical insight:
+
+semantic persistence and decoder compatibility are different properties
+
+The earlier broken system accidentally preserved decoder stability because only a small portion of the latent manifold was perturbed.
+
+The truncation bug effectively acted as:
+
+small residual latent conditioning
+
+rather than full semantic superposition.
+
+As a result:
+
+most encoder hidden states remained transformer-native
+positional structure remained partially intact
+decoder cross-attention stayed inside familiar activation manifolds
+
+The newer mathematically cleaner system produced larger latent perturbations that violated transformer-native geometry.
+
+This suggests:
+
+transformer hidden states may not behave as linearly composable semantic vectors
+
+at least not under naive tokenwise addition.
+
+More specifically:
+
+semantic information can survive latent algebra
+decoder coherence is much more fragile
+transformers appear tolerant to small latent perturbations
+large synthetic manifold violations destabilize generation
+
+Important observation:
+
+The earlier flawed system preserved semantic category information better than the theoretically cleaner implementation.
+
+This may indicate that:
+
+small residual semantic modulation
+
+is more compatible with transformer decoding than:
+
+full hidden-state superposition
+
+Current hypothesis:
+
+Transformer decoders require encoder hidden states to remain close to naturally generated manifold trajectories. Large algebraic manipulations may preserve semantic signal while destroying decoder interpretability.
+
+Experimental implication:
+
+Future work should likely explore:
+
+residual latent steering
+low-rank semantic perturbations
+attention-based memory conditioning
+learned latent composition
+manifold-preserving hidden-state operations
+
+instead of unrestricted tokenwise hidden-state addition.
+
+Experiment Log — Latent Superposition, Re-Ingestion, and Semantic Field Preservation
+Objective
+
+Evaluate whether encoder hidden states can function as persistent neural memories and whether multiple retrieved hidden states can be composed through latent superposition rather than text concatenation.
+
+Initial Mean-Pooling Experiment
+
+Retrieved hidden states were combined using mean pooling.
+
+Result:
+
+a
+
+or similarly collapsed outputs regardless of retrieved content.
+
+Observed statistics:
+
+std ≈ 0.06
+
+Interpretation:
+
+Mean pooling destroyed most latent structure and produced severe semantic collapse.
+
+First Latent Addition Experiment
+
+Mean pooling was replaced with direct hidden-state addition.
+
+Implementation was later discovered to contain major flaws:
+
+variable-length hidden states
+truncation to minimum sequence length
+query hidden states merged with memory hidden states
+instruction hidden states merged with memory hidden states
+inconsistent attention masks
+
+Example operation:
+
+base_memory[:, :min_len, :] += memory[:, :min_len, :]
+
+Despite these flaws, outputs became:
+
+planetary
+astronomes
+
+for:
+
+What are galaxies?
+
+Important observation:
+
+The outputs were incorrect but remained inside the astronomy semantic neighborhood.
+
+Architectural Cleanup
+
+The system was then modified to:
+
+re-ingest all documents using fixed latent width
+use fixed-length latent memories
+separate query framing from memory storage
+separate answer instructions from memory storage
+preserve full latent sequence lengths
+construct proper attention masks
+
+After re-ingestion, latent statistics became:
+
+std ≈ 0.147
+avg token norm ≈ 4.0
+
+indicating substantially stronger latent activations.
+
+Control Experiment: No Retrieved Memory
+
+Question:
+
+What are galaxies?
+
+Retrieved memories:
+
+none
+
+Outputs:
+
+a group of objects with a similar shape
+a constellation
+a space station
+
+Observed statistics:
+
+std ≈ 0.058
+avg token norm ≈ 0.64
+
+Interpretation:
+
+The model possessed weak astronomy-related prior knowledge but failed to produce a correct definition.
+
+Generations remained generic and highly uncertain.
+
+Experiment: Retrieved Hidden Memories Enabled
+
+Question:
+
+What are galaxies?
+
+Retrieved memories included astrophysics chunks containing explicit galaxy definitions:
+
+"Galaxies are gravitationally bound systems containing stars, gas, dust, dark matter..."
+
+Generated outputs:
+
+The scientific name for a planet is.
+
+and
+
+A series of planets orbiting stars, and a variety of other planets in the Solar System.
+
+These answers remained incorrect.
+
+However they were:
+
+grammatically coherent
+astronomy-domain grounded
+significantly more detailed than the no-memory baseline
+Most Important Observation
+
+Comparison:
+
+Without Memory
+constellation
+space station
+group of objects
+With Memory
+planet
+stars
+solar system
+orbiting
+
+The semantic center of generation clearly shifted.
+
+The decoder consistently moved deeper into the astronomy domain after memory injection.
+
+Key Insight
+
+The retrieved memory contained an explicit galaxy definition, yet the model never reconstructed that definition.
+
+Instead the decoder produced nearby astronomy concepts.
+
+This suggests:
+
+galaxy memory
+→ astronomy semantic field
+→ decoder output
+
+rather than:
+
+galaxy memory
+→ galaxy definition reconstruction
+Updated Hypothesis
+
+Current evidence suggests latent superposition preserves:
+
+high-level semantic category information
+
+while degrading:
+
+fine-grained conceptual information
+
+The decoder appears able to identify:
+
+"This latent state is about astronomy."
+
+but not:
+
+"This latent state specifically encodes galaxies."
+Theoretical Implication
+
+The experiments now support a stronger claim than earlier runs.
+
+Evidence currently suggests:
+
+latent hidden states contain recoverable semantic fields
+
+and
+
+latent superposition can preserve domain-level meaning
+
+even when exact factual reconstruction fails.
+
+This is consistent with the emerging hypothesis that transformer hidden states may behave more like:
+
+continuous semantic fields
+
+rather than:
+
+symbolic memory records
+Current Working Conclusion
+
+Observed behavior is best summarized as:
+
+hidden-state superposition
+→ semantic steering survives
+
+hidden-state superposition
+→ domain identity survives
+
+hidden-state superposition
+→ exact concept reconstruction degrades
+
+This is presently the strongest empirical evidence obtained in support of the semantic-field interpretation of latent memory representations.

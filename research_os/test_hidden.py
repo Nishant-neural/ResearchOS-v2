@@ -9,7 +9,7 @@ from generate import (
 retriever = HybridRetriever()
 
 results = retriever.retrieve(
-    "How does neuron stars form?"
+    "What are galaxies?"
 )
 
 ids = [
@@ -18,7 +18,7 @@ ids = [
 ]
 
 answer = generate_hidden_answer(
-    "How does neuron stars form?",
+    "What are galaxies?",
     ids,
 )
 
