@@ -60,6 +60,7 @@ def generate_text_answer(
 
 
 @torch.no_grad()
+@torch.no_grad()
 def generate_hidden_answer(
     query,
     chunk_ids,
@@ -69,7 +70,8 @@ def generate_hidden_answer(
         chunk_ids
     )
 
-    cached_memories = []
+    memory_hidden_list = []
+    memory_mask_list = []
 
     # -----------------------------------
     # QUERY FRAMING
@@ -88,13 +90,11 @@ def generate_hidden_answer(
         truncation=True,
     )
 
-    query_encoder = (
-        generation_model.encoder(
-            input_ids=query_inputs.input_ids,
-            attention_mask=query_inputs.attention_mask,
-            output_hidden_states=True,
-            return_dict=True,
-        )
+    query_encoder = generation_model.encoder(
+        input_ids=query_inputs.input_ids,
+        attention_mask=query_inputs.attention_mask,
+        output_hidden_states=True,
+        return_dict=True,
     )
 
     query_hidden = (
@@ -102,8 +102,10 @@ def generate_hidden_answer(
     )
 
     # -----------------------------------
-    # CACHED MEMORY
+    # MEMORY RETRIEVAL
     # -----------------------------------
+
+    DROP_FACTOR = 4
 
     for item in retrieved:
 
@@ -122,50 +124,30 @@ def generate_hidden_answer(
             attention_mask = attention_mask.unsqueeze(0)
 
         # -----------------------------------
-        # FORCE FIXED SHAPE
+        # TOKEN DROPPING
         # -----------------------------------
 
-        current_len = hidden_states.shape[1]
+        hidden_states = hidden_states[
+            :,
+            ::DROP_FACTOR,
+            :
+        ]
 
-        if current_len < TARGET_LEN:
+        attention_mask = attention_mask[
+            :,
+            ::DROP_FACTOR
+        ]
 
-            pad_amount = (
-                TARGET_LEN - current_len
-            )
-
-            hidden_states = (
-                torch.nn.functional.pad(
-                    hidden_states,
-                    (0, 0, 0, pad_amount),
-                )
-            )
-
-            attention_mask = (
-                torch.nn.functional.pad(
-                    attention_mask,
-                    (0, pad_amount),
-                )
-            )
-
-        elif current_len > TARGET_LEN:
-
-            hidden_states = hidden_states[
-                :,
-                :TARGET_LEN,
-                :
-            ]
-
-            attention_mask = attention_mask[
-                :,
-                :TARGET_LEN
-            ]
-
-        cached_memories.append(
+        memory_hidden_list.append(
             hidden_states
         )
 
+        memory_mask_list.append(
+            attention_mask
+        )
+
     # -----------------------------------
-    # ANSWER INSTRUCTION
+    # ANSWER FRAMING
     # -----------------------------------
 
     answer_prompt = f"""
@@ -186,13 +168,11 @@ def generate_hidden_answer(
         truncation=True,
     )
 
-    answer_encoder = (
-        generation_model.encoder(
-            input_ids=answer_inputs.input_ids,
-            attention_mask=answer_inputs.attention_mask,
-            output_hidden_states=True,
-            return_dict=True,
-        )
+    answer_encoder = generation_model.encoder(
+        input_ids=answer_inputs.input_ids,
+        attention_mask=answer_inputs.attention_mask,
+        output_hidden_states=True,
+        return_dict=True,
     )
 
     answer_hidden = (
@@ -200,110 +180,35 @@ def generate_hidden_answer(
     )
 
     # -----------------------------------
-    # LATENT SUPERPOSITION
+    # CONCATENATION ONLY
     # -----------------------------------
 
-    if len(cached_memories) == 0:
+    hidden_parts = [query_hidden]
+    mask_parts = [query_inputs.attention_mask]
 
-        superposed_memory = torch.zeros(
-            (
-                1,
-                TARGET_LEN,
-                generation_model.config.d_model,
-            )
-        )
-
-    else:
-
-        superposed_memory = (
-            cached_memories[0].clone()
-        )
-
-        print(
-            "\n===== MEMORY SUPERPOSITION ====="
-        )
-
-        for idx, memory in enumerate(
-            cached_memories[1:]
-        ):
-
-            # -----------------------------------
-            # WEIGHTED ADDITION
-            # -----------------------------------
-
-            superposed_memory += (
-                0.25 * memory
-            )
-
-            print(
-                f"\nAfter cached memory {idx + 1}"
-            )
-
-            print(
-                "mean:",
-                superposed_memory.mean().item()
-            )
-
-            print(
-                "std:",
-                superposed_memory.std().item()
-            )
-
-            print(
-                "avg norm:",
-                superposed_memory.norm(
-                    dim=-1
-                ).mean().item()
-            )
-
-            print(
-                "max abs:",
-                superposed_memory.abs().max().item()
-            )
-
-        print(
-            "================================\n"
-        )
-
-    # -----------------------------------
-    # FINAL MEMORY LAYOUT
-    # -----------------------------------
-
-    memory = torch.cat(
-        [
-            query_hidden,
-            superposed_memory,
-            answer_hidden,
-        ],
-        dim=1,
+    hidden_parts.extend(
+        memory_hidden_list
     )
 
-    # -----------------------------------
-    # ATTENTION MASKS
-    # -----------------------------------
-
-    query_mask = (
-        query_inputs.attention_mask
+    mask_parts.extend(
+        memory_mask_list
     )
 
-    memory_mask = torch.ones(
-        (
-            superposed_memory.shape[0],
-            superposed_memory.shape[1],
-        ),
-        dtype=torch.long,
+    hidden_parts.append(
+        answer_hidden
     )
 
-    answer_mask = (
+    mask_parts.append(
         answer_inputs.attention_mask
     )
 
+    memory = torch.cat(
+        hidden_parts,
+        dim=1,
+    )
+
     attention_mask = torch.cat(
-        [
-            query_mask,
-            memory_mask,
-            answer_mask,
-        ],
+        mask_parts,
         dim=1,
     )
 
@@ -312,7 +217,7 @@ def generate_hidden_answer(
     )
 
     # -----------------------------------
-    # FINAL DEBUG
+    # DEBUG
     # -----------------------------------
 
     print("\n===== LATENT DEBUG =====")
@@ -354,30 +259,14 @@ def generate_hidden_answer(
         memory.abs().max().item()
     )
 
-    print(
-        "dtype:",
-        memory.dtype
-    )
-
-    print(
-        "device:",
-        memory.device
-    )
-
     print("========================\n")
-
-    # -----------------------------------
-    # GENERATION
-    # -----------------------------------
 
     outputs = generation_model.generate(
         encoder_outputs=encoder_outputs,
         attention_mask=attention_mask,
         max_new_tokens=128,
-        do_sample=True,
-        temperature=0.7,
-        top_p=0.9,
-        repetition_penalty=1.1,
+        do_sample=False,
+        num_beams = 1,
     )
 
     return tokenizer.decode(

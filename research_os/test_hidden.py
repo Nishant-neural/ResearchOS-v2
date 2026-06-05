@@ -9,7 +9,7 @@ from generate import (
 retriever = HybridRetriever()
 
 results = retriever.retrieve(
-    "What is the architecture?"
+    "Why does this architecture avoid repeated encoder computation?"
 )
 
 ids = [
@@ -18,7 +18,7 @@ ids = [
 ]
 
 answer = generate_hidden_answer(
-    "What is the architecture?",
+    "Why does this architecture avoid repeated encoder computation?",
     ids,
 )
 

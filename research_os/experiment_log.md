@@ -1195,3 +1195,13 @@ cross-attention memory reading
 and decoder-memory compatibility
 
 which currently appears to be the most important frontier for the architecture.
+
+Truncation Superposition Re-evaluation
+
+Earlier truncation-based fusion (query + memory + answer) produced astronomy-related outputs ("planetary", "astronomes"), suggesting that semantic signal might survive aggressive latent fusion. However, replication on a README-based memory failed to produce consistent retrieval. Outputs were largely degenerate ("The concept of the concept...", "A re-design", etc.) despite activation statistics remaining within reasonable ranges (avg token norm ≈ 2.3, std ≈ 0.084), indicating that failure was not caused by norm explosion.
+
+This weakens the hypothesis that truncation superposition is a reliable latent composition mechanism. The astronomy result may have been an isolated manifold coincidence or domain-level semantic amplification rather than evidence of robust memory composition.
+
+Current evidence continues to favor sequence-wise hidden-state concatenation as the most reliable retrieval mechanism. Weighted superposition preserves some semantic information but progressively loses precision as additional memories are added. Pure superposition remains ineffective for factual retrieval.
+
+Current conclusion: The primary unsolved problem is no longer whether hidden states can function as memory representations (concatenation demonstrates they can), but how to reduce decoder cross-attention token cost while preserving retrieval quality. Future experiments should focus on latent token compression and decoder alignment rather than arithmetic superposition.
