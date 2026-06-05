@@ -19,7 +19,7 @@ inference time: the decoder conditions on latent semantic states, not raw chunk 
 retriever = HybridRetriever()
 
 results = retriever.retrieve(
-    "What are encoder hidden states hypothesized to be?"
+    "What is the core hypothesis?"
 )
 
 ids = [
@@ -28,7 +28,7 @@ ids = [
 ]
 
 answer = generate_hidden_answer(
-    "What are encoder hidden states hypothesized to be?",
+    "What is the core hypothesis?",
     ids,
 )
 

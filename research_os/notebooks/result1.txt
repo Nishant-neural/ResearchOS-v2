@@ -601,7 +601,335 @@ A test to test exact information precision
 used a question with answer in a single line of text in a para.
 question-What are encoder hidden states hypothesized to be?
 
+chunks used 2
 exact phrase from text- reusable semantic computation artifacts
 answer1 - a semantic computation engine
 asnwer 2 - a method of retrieving text
 answer 3 - encoders 
+
+chunks used 3
+answer - a semantic architecture
+answer - decoder
+answer - a persistent state
+answer - a decoding machine
+answer - encoder
+answer - a hidden state
+answer - unconfirmed
+answer - encoders
+answer - a state of being
+answer - asyymetric
+answer - encoder
+
+chunks used 4 
+answer - encoder hidden states
+answer - a retransfer
+answer - a stateless arithmatic representation
+#############################################################################################
+the previous superposition experiments were weighted additions
+ 0.25 * memory repetetively so succesive memory became weaker.
+
+ In true superposition with normalization
+ question - What are encoder hidden states hypothesized to be? deciphering is the
+  answer on rerun
+   encoder defy gravity
+    encoder hidden states
+     encoder hidden states
+      these are the answers one important point query is normal hidden state its not superposed its concatenated its just repeating query 
+ even with 2 chunks answer is encoder hidden states 
+ a unified set of encoders
+
+ so tested a question where answer was in context not in query
+ 
+ What is the  hypothesis?
+ answer-This is the same as the concept of decompressing data
+ This is the same as the word "stigma" in the context of the sentence
+ the word "delicate" was written
+
+
+
+===== FRESH TEXT ENCODING =====
+shape: torch.Size([1, 216, 768])
+mean: 0.004373953677713871
+std: 0.14282266795635223
+avg token norm: 3.910337448120117
+max abs: 0.6887326836585999
+========================
+
+
+===== QUERY ENCODER OUTPUT =====
+shape: torch.Size([1, 19, 768])
+mean: 0.002212158404290676
+std: 0.12835557758808136
+avg token norm: 3.412122964859009
+max abs: 0.6261300444602966
+========================
+
+
+===== CACHED MEMORY 0 =====
+shape: torch.Size([1, 256, 768])
+mean: 0.005107071716338396
+std: 0.15067410469055176
+avg token norm: 4.111324787139893
+max abs: 0.9400792121887207
+========================
+
+
+===== CACHED MEMORY 1 =====
+shape: torch.Size([1, 256, 768])
+mean: 0.00417347950860858
+std: 0.14817021787166595
+avg token norm: 4.035948276519775
+max abs: 0.9117408394813538
+========================
+
+
+===== MEMORY SUPERPOSITION =====
+target_norm: 3.412122964859009
+scaled_norm: 3.4121227264404297
+mean: 0.004837035667151213
+std: 0.12553651630878448
+avg norm: 3.4121227264404297
+max abs: 0.815690279006958
+================================
+
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 304, 768])
+attention_mask.shape: torch.Size([1, 304])
+attention_mask.sum(): 304
+hidden_states.mean(): 0.004236164037138224
+hidden_states.std(): 0.12794646620750427
+avg token norm: 3.4526805877685547
+max abs value: 0.8341905474662781
+dtype: torch.float32
+device: cpu
+========================
+
+This is the same as the word "stigma" in the context of the sentence
+#######################################################################
+
+questions- what are encoder hidden states hypothesized to be?
+
+
+===== FRESH TEXT ENCODING =====
+shape: torch.Size([1, 216, 768])
+mean: 0.004373953677713871
+std: 0.14282266795635223
+avg token norm: 3.910337448120117
+max abs: 0.6887326836585999
+========================
+
+
+===== QUERY ENCODER OUTPUT =====
+shape: torch.Size([1, 26, 768])
+mean: 0.0020672704558819532
+std: 0.12562057375907898
+avg token norm: 3.4194047451019287
+max abs: 0.6088688373565674
+========================
+
+
+===== CACHED MEMORY 0 =====
+shape: torch.Size([1, 256, 768])
+mean: 0.00417347950860858
+std: 0.14817021787166595
+avg token norm: 4.035948276519775
+max abs: 0.9117408394813538
+========================
+
+
+===== CACHED MEMORY 1 =====
+shape: torch.Size([1, 256, 768])
+mean: 0.005107071716338396
+std: 0.15067410469055176
+avg token norm: 4.111324787139893
+max abs: 0.9400792121887207
+========================
+
+
+===== CACHED MEMORY 2 =====
+shape: torch.Size([1, 256, 768])
+mean: 0.004587823059409857
+std: 0.14359807968139648
+avg token norm: 3.9077858924865723
+max abs: 0.7531622052192688
+========================
+
+
+===== CACHED MEMORY 3 =====
+shape: torch.Size([1, 256, 768])
+mean: 0.004786939825862646
+std: 0.14928659796714783
+avg token norm: 4.089636325836182
+max abs: 0.7872904539108276
+========================
+
+
+===== MEMORY SUPERPOSITION =====
+
+After cached memory 1
+mean: 0.009280551224946976
+std: 0.24085994064807892
+avg norm: 6.546650409698486
+max abs: 1.5650196075439453
+
+After cached memory 2
+mean: 0.013868373818695545
+std: 0.3144000470638275
+avg norm: 8.489044189453125
+max abs: 2.005718469619751
+
+After cached memory 3
+mean: 0.018655313178896904
+std: 0.39835765957832336
+avg norm: 10.70806884765625
+max abs: 2.377601146697998
+================================
+
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 321, 768])
+attention_mask.shape: torch.Size([1, 321])
+attention_mask.sum(): 321
+hidden_states.mean(): 0.015135473571717739
+hidden_states.std(): 0.36133435368537903
+avg token norm: 9.295434951782227
+max abs value: 2.377601146697998
+dtype: torch.float32
+device: cpu
+========================
+
+
+ with true superposition activations and avg norm was exploding
+
+
+ #######################################################################
+ pure superposition of query and answer framing and memory with some norm
+ 
+===== FRESH TEXT ENCODING =====
+shape: torch.Size([1, 216, 768])
+mean: 0.004373953677713871
+std: 0.14282266795635223
+avg token norm: 3.910337448120117
+max abs: 0.6887326836585999
+========================
+
+
+===== QUERY ENCODER OUTPUT =====
+shape: torch.Size([1, 20, 768])
+mean: 0.000520039931870997
+std: 0.12507934868335724
+avg token norm: 3.3376336097717285
+max abs: 0.6335493922233582
+========================
+
+
+===== CACHED MEMORY 0 =====
+shape: torch.Size([1, 256, 768])
+mean: 0.005107071716338396
+std: 0.15067410469055176
+avg token norm: 4.111324787139893
+max abs: 0.9400792121887207
+========================
+
+
+===== CACHED MEMORY 1 =====
+shape: torch.Size([1, 256, 768])
+mean: 0.00417347950860858
+std: 0.14817021787166595
+avg token norm: 4.035948276519775
+max abs: 0.9117408394813538
+========================
+
+
+===== MEMORY SUPERPOSITION =====
+target_norm: 3.3376336097717285
+scaled_norm: 3.3376331329345703
+mean: 0.004731439519673586
+std: 0.1227959543466568
+avg norm: 3.3376331329345703
+max abs: 0.7978830933570862
+================================
+
+FULL SUPERPOSED NORM: 3.3376336097717285
+FULL SUPERPOSED STD: 0.12840640544891357
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 256, 768])
+attention_mask.shape: torch.Size([1, 256])
+attention_mask.sum(): 256
+hidden_states.mean(): 0.004241997841745615
+hidden_states.std(): 0.12840640544891357
+avg token norm: 3.3376336097717285
+max abs value: 1.4852529764175415
+dtype: torch.float32
+device: cpu
+========================
+
+a) a) b) c) d) e) e) f) e) f) e) f) e) f) e) f) e) f) e) f) e) f) e) f) e) f) e) f) e
+
+
+########################################################################################
+pure padding vs truncation experiment normalized query answer memory bfore padding and adding , in the answer before after padding and adding they were normalized
+
+===== FRESH TEXT ENCODING =====
+shape: torch.Size([1, 216, 768])
+mean: 0.004373953677713871
+std: 0.14282266795635223
+avg token norm: 3.910337448120117
+max abs: 0.6887326836585999
+========================
+
+
+===== QUERY ENCODER OUTPUT =====
+shape: torch.Size([1, 20, 768])
+mean: 5.8410845667822286e-05
+std: 0.036085519939661026
+avg token norm: 1.0
+max abs: 0.641226053237915
+========================
+
+
+===== CACHED MEMORY 0 =====
+shape: torch.Size([1, 256, 768])
+mean: 0.0011926166480407119
+std: 0.03606477007269859
+avg token norm: 1.0
+max abs: 0.6439467072486877
+========================
+
+
+===== CACHED MEMORY 1 =====
+shape: torch.Size([1, 256, 768])
+mean: 0.000970874389167875
+std: 0.03607141971588135
+avg token norm: 1.0
+max abs: 0.6467400193214417
+========================
+
+
+===== MEMORY SUPERPOSITION =====
+target_norm: 1.0
+scaled_norm: 0.9999999403953552
+mean: 0.0013703672448173165
+std: 0.03623317554593086
+avg norm: 0.9999999403953552
+max abs: 0.7656506299972534
+================================
+
+FULL SUPERPOSED NORM: 1.0
+FULL SUPERPOSED STD: 0.03741031140089035
+
+===== LATENT DEBUG =====
+hidden_states.shape: torch.Size([1, 256, 768])
+attention_mask.shape: torch.Size([1, 256])
+attention_mask.sum(): 256
+hidden_states.mean(): 0.0012339368695393205
+hidden_states.std(): 0.03741031140089035
+avg token norm: 1.0
+max abs value: 0.8631664514541626
+dtype: torch.float32
+device: cpu
+========================
+
+a) a b) a c) d) a e) a f) a g) a h) a iii) a j) a k) a j) a k) a j) a k) a j) a k) a j) a k) a j) a k) a j) a k) a j) a k) a j)

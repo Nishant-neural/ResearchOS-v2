@@ -143,6 +143,20 @@ def generate_hidden_answer(
         query_encoder.last_hidden_state
     )
 
+    query_hidden = (
+    query_hidden
+    /
+    query_hidden.norm(
+        dim=-1,
+        keepdim=True
+    ).clamp(min=1e-6)
+)
+
+    query_target_norm = (
+    query_hidden.norm(
+        dim=-1
+    ).mean()
+)
     debug_hidden(
         "QUERY ENCODER OUTPUT",
         query_hidden,
@@ -157,6 +171,15 @@ def generate_hidden_answer(
         hidden_states = torch.tensor(
             item.payload["hidden_states"]
         ).float()
+
+        hidden_states = (
+    hidden_states
+    /
+    hidden_states.norm(
+        dim=-1,
+        keepdim=True
+    ).clamp(min=1e-6)
+)
 
         attention_mask = torch.tensor(
             item.payload["attention_mask"]
@@ -251,113 +274,217 @@ def generate_hidden_answer(
         answer_encoder.last_hidden_state
     )
 
+    answer_hidden = (
+    answer_hidden
+    /
+    answer_hidden.norm(
+        dim=-1,
+        keepdim=True
+    ).clamp(min=1e-6)
+)
+
     # -----------------------------------
-    # LATENT SUPERPOSITION
-    # -----------------------------------
+# LATENT SUPERPOSITION
+# -----------------------------------
 
     if len(cached_memories) == 0:
 
         superposed_memory = torch.zeros(
-            (
-                1,
-                TARGET_LEN,
-                generation_model.config.d_model,
-            )
+        (
+            1,
+            TARGET_LEN,
+            generation_model.config.d_model,
         )
+    )
 
     else:
 
+        print(
+        "\n===== MEMORY SUPERPOSITION ====="
+    )
+
+    # -----------------------------------
+    # TRUE SUPERPOSITION
+    # -----------------------------------
+
+        superposed_memory = torch.zeros_like(
+        cached_memories[0]
+    )
+
+        for memory in cached_memories:
+
+            superposed_memory += memory
+
+    # -----------------------------------
+    # MATCH DECODER EXPECTED SCALE
+    # -----------------------------------
+
+        target_norm = (
+        query_hidden.norm(
+            dim=-1
+        ).mean()
+    )
+
+        current_norm = (
+        superposed_memory.norm(
+            dim=-1
+        ).mean()
+    )
+
         superposed_memory = (
-            cached_memories[0].clone()
+        superposed_memory
+        * (
+            target_norm
+            / (
+                current_norm + 1e-8
+            )
         )
-
-        print(
-            "\n===== MEMORY SUPERPOSITION ====="
-        )
-
-        for idx, memory in enumerate(
-            cached_memories[1:]
-        ):
-
-            # -----------------------------------
-            # WEIGHTED ADDITION
-            # -----------------------------------
-
-            superposed_memory += (
-                0.25 * memory
-            )
-
-            print(
-                f"\nAfter cached memory {idx + 1}"
-            )
-
-            print(
-                "mean:",
-                superposed_memory.mean().item()
-            )
-
-            print(
-                "std:",
-                superposed_memory.std().item()
-            )
-
-            print(
-                "avg norm:",
-                superposed_memory.norm(
-                    dim=-1
-                ).mean().item()
-            )
-
-            print(
-                "max abs:",
-                superposed_memory.abs().max().item()
-            )
-
-        print(
-            "================================\n"
-        )
-
-    # -----------------------------------
-    # FINAL MEMORY LAYOUT
-    # -----------------------------------
-
-    memory = torch.cat(
-        [
-            query_hidden,
-            superposed_memory,
-            answer_hidden,
-        ],
-        dim=1,
     )
 
-    # -----------------------------------
-    # ATTENTION MASKS
-    # -----------------------------------
-
-    query_mask = (
-        query_inputs.attention_mask
+        print(
+        "target_norm:",
+        target_norm.item()
     )
 
-    memory_mask = torch.ones(
+        print(
+        "scaled_norm:",
+        superposed_memory.norm(
+            dim=-1
+        ).mean().item()
+    )
+
+        print(
+        "mean:",
+        superposed_memory.mean().item()
+    )
+
+        print(
+        "std:",
+        superposed_memory.std().item()
+    )
+
+        print(
+        "avg norm:",
+        superposed_memory.norm(
+            dim=-1
+        ).mean().item()
+    )
+
+        print(
+        "max abs:",
+        superposed_memory.abs().max().item()
+    )
+
+        print(
+        "================================\n"
+    )
+    
+    # -----------------------------------
+# PAD QUERY TO TARGET_LEN
+# -----------------------------------
+
+    query_len = query_hidden.shape[1]
+
+    if query_len < TARGET_LEN:
+
+        query_hidden = torch.nn.functional.pad(
+        query_hidden,
         (
-            superposed_memory.shape[0],
-            superposed_memory.shape[1],
+            0,
+            0,
+            0,
+            TARGET_LEN - query_len,
         ),
-        dtype=torch.long,
     )
 
-    answer_mask = (
-        answer_inputs.attention_mask
+    else:
+
+        query_hidden = query_hidden[
+        :,
+        :TARGET_LEN,
+        :
+    ]
+
+# -----------------------------------
+# PAD ANSWER TO TARGET_LEN
+# -----------------------------------
+
+    answer_len = answer_hidden.shape[1]
+
+    if answer_len < TARGET_LEN:
+
+        answer_hidden = torch.nn.functional.pad(
+        answer_hidden,
+        (
+            0,
+            0,
+            0,
+            TARGET_LEN - answer_len,
+        ),
     )
 
-    attention_mask = torch.cat(
-        [
-            query_mask,
-            memory_mask,
-            answer_mask,
-        ],
-        dim=1,
+    else:
+
+        answer_hidden = answer_hidden[
+        :,
+        :TARGET_LEN,
+        :
+    ]
+
+# -----------------------------------
+# FULL LATENT SUPERPOSITION
+# -----------------------------------
+
+    memory = (
+    query_hidden
+    + superposed_memory
+    + answer_hidden
+)
+
+# -----------------------------------
+# MATCH QUERY SCALE
+# -----------------------------------
+    target_norm = query_target_norm
+
+    current_norm = (
+    memory.norm(
+        dim=-1
+    ).mean()
+)
+
+    memory = (
+    memory
+    * (
+        target_norm
+        / (
+            current_norm + 1e-8
+        )
     )
+)
+
+# -----------------------------------
+# SIMPLE ATTENTION MASK
+# -----------------------------------
+
+    attention_mask = torch.ones(
+    (
+        memory.shape[0],
+        memory.shape[1],
+    ),
+    dtype=torch.long,
+)
+
+    print(
+    "FULL SUPERPOSED NORM:",
+    memory.norm(
+        dim=-1
+    ).mean().item()
+)
+
+    print(
+    "FULL SUPERPOSED STD:",
+    memory.std().item()
+)
 
     encoder_outputs = BaseModelOutput(
         last_hidden_state=memory
@@ -426,10 +553,8 @@ def generate_hidden_answer(
         encoder_outputs=encoder_outputs,
         attention_mask=attention_mask,
         max_new_tokens=128,
-        do_sample=True,
-        temperature=0.7,
-        top_p=0.9,
-        repetition_penalty=1.1,
+        do_sample=False,
+        
     )
 
     return tokenizer.decode(
