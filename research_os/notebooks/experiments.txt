@@ -1,0 +1,41 @@
+It feels incredibly contradictory that your hidden state MSE is so close to zero (0.02) while your KL divergence is practically melting (1275.94). However, this is a classic and painful trap when working with transformer latent spaces.
+The short answer is: MSE is completely blind to scale and distribution shape, whereas KL divergence is hypersensitive to them.
+Here is exactly how a tiny 0.02 structural error in hidden states explodes into a massive 1200+ mathematical error at the output layer:
+## 1. The Logit Un-Embedding Layer Amplifies the Error
+The final layer of your model (the LM Head) is a massive matrix multiplication that projects your decoder hidden states ($h$) into vocabulary logits ($z = h \cdot W$). [1, 2] 
+
+* If the weight matrix $W$ has large values or a high condition number, it acts as a massive geometric amplifier.
+* A tiny shift of 0.02 in the hidden state vector $h$ can easily translate to a shift of 5.0 or 10.0 in the resulting logits ($z$). Because logits live in log-space, a difference of 10.0 means one token is suddenly $e^{10}$ ($\approx 22,000$ times) more or less probable than it should be.
+
+## 2. The Exponential Nature of Softmax and KL
+KL divergence does not look at the hidden states; it looks at the probabilities after they pass through the Softmax function ($e^{z_i} / \sum e^{z_j}$). [3] 
+
+* Because of the exponential ($e^z$), Softmax is extremely unstable when scales change even slightly.
+* If your compressor slightly squashes or stretches the hidden states, the student's logits might become just a tiny bit wider in range than the teacher's (e.g., spanning -15 to +15 instead of -10 to +10).
+* To the MSE loss, a minor scale difference across dimensions looks like a tiny 0.02 error. But to the Softmax function, it causes the highest-probability token to shoot up to a hard 1.0, while pushing other tokens down to a hard 0.0. [4] 
+
+## 3. The "Zero-Probability" Death Trap in KL Math
+Look closely at the actual calculus of the KL Divergence formula:
+$$\text{KL}(P \parallel Q) = \sum P(x) \log\left(\frac{P(x)}{Q(x)}\right)$$ 
+Where $P$ is your teacher's distribution and $Q$ is your student's distribution. [5] 
+
+* If the teacher thinks a token has a tiny, normal probability like $P(x) = 0.01$...
+* ...but your student's slightly warped scale caused its Softmax to collapse that token to absolute zero due to floating-point limits ($Q(x) = 10^{-45}$ or a literal 0.0 due to underflow)...
+* The fraction $\frac{P(x)}{Q(x)}$ becomes $\frac{0.01}{0}$ which approaches infinity.
+
+Even if this happens to just a few dozen tokens out of your 32,000+ vocabulary, taking the logarithm of an almost-infinite fraction causes the KL divergence value to immediately skyrocket past 1000.
+## What This Tells You About Your Compressor
+Your compressor is actually doing a great job of preserving the semantic meaning (which is why MSE is 0.02 and top-5 agreement is 80%). However, it is slightly altering the variance, norm, or scale of the vectors. The decoder's final layer is rejecting this scale mismatch, causing the probabilities to completely polarize and break.
+## How to Prove This Right Now
+Run a quick diagnostic in your script to see this scale explosion in action:
+
+   1. Print teacher_logits.var() and student_logits.var(). You will likely find the student's variance is drastically higher or lower.
+   2. Print student_logits.max() and student_logits.min(). If you see numbers exceeding $+50$ or $-50$, your scale is broken.
+
+If you check, what are the maximum and minimum values of your student logits compared to your teacher logits? That will reveal the exact scale distortion factor.
+
+[1] [https://arxiv.org](https://arxiv.org/abs/2603.10145)
+[2] [https://arxiv.org](https://arxiv.org/html/2602.21224v1)
+[3] [https://www.geeksforgeeks.org](https://www.geeksforgeeks.org/machine-learning/ml-common-loss-functions/)
+[4] [https://marcossilva.github.io](https://marcossilva.github.io/en/2019/07/29/coursera-deep-learning-module-2-week-3.html)
+[5] [https://medium.com](https://medium.com/@adnanmasood/ai-interview-mastery-series-day-0-building-the-bedrock-core-mathematics-ml-theory-for-bb83340441f8)

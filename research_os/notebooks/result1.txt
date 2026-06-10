@@ -1055,3 +1055,12 @@ we are giving wildly different encoder hidden states to the decoder
 Instead it may be:
 
 "must stay on decoder manifold"
+
+TEST ON 0.02 MSE BETWEEN DECODER HIDDEN STATES CHECKPOINT
+
+Top-5 agreement: 0.80859375
+Top-5 overlap: 0.35000000000000003
+Logit MSE: 16.772064208984375
+KL divergence: 1275.941650390625
+
+The hidden compressor is breaking or variating the scale or norm that why logits and output is broken.
