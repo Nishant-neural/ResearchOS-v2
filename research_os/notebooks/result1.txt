@@ -1032,3 +1032,26 @@ hidden: torch.Size([1, 256, 768]) compressed: torch.Size([1, 128, 768])
 0 3500 0.029284362729624983
 0 3600 0.02903992283475859
 hidden: torch.Size([1, 256, 768]) compressed: torch.Size([1, 128, 768])
+
+Today tested generation the top token agreement was 59 percent.
+The autoregressive generation is collapsing but hidden state mse is 0.02.
+Today compared the compressed hidden states and encoder hidden states 
+the results
+hidden mean: 0.00789443589746952 hidden std : 0.14428803324699402 
+compressed mean: -0.0011648358777165413 compressed std : 1.0062857866287231
+
+Encoder std      0.144
+Compressed std   1.006
+
+Yet
+
+Decoder hidden MSE 0.02
+we are giving wildly different encoder hidden states to the decoder
+ yet it produces almost same decoder hidden states meaning 
+ The decoder alignment problem may not be:
+
+"must stay on encoder manifold"
+
+Instead it may be:
+
+"must stay on decoder manifold"
