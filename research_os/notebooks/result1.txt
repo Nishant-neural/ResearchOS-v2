@@ -1064,3 +1064,13 @@ Logit MSE: 16.772064208984375
 KL divergence: 1275.941650390625
 
 The hidden compressor is breaking or variating the scale or norm that why logits and output is broken.
+
+Teacher min max logits :  -92.13641357421875       5.431277751922607 teacher  entropy:  2.79243803024292 
+student   min max logits:  -64.04989624023438      -0.18083715438842773   student entropy:  2.353595018386841
+
+teacher mean and std :  -18.824487686157227     6.804194927215576
+student mean and std :  -20.45339012145996     5.772799015045166
+
+teacher norm -10.406413078308105 
+student norm - 9.813036918640137 
+cosine similarity - 0.9292904734611511

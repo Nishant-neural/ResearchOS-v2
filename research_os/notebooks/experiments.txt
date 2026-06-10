@@ -33,9 +33,40 @@ Run a quick diagnostic in your script to see this scale explosion in action:
    2. Print student_logits.max() and student_logits.min(). If you see numbers exceeding $+50$ or $-50$, your scale is broken.
 
 If you check, what are the maximum and minimum values of your student logits compared to your teacher logits? That will reveal the exact scale distortion factor.
+Your logit printouts reveal exactly why your model is collapsing. The numbers show a severe calibration shift and a math error in your evaluation script that explains why the KL value looks so massive.
+Let's break down exactly what these numbers are telling us:
+## 1. The Real Reason for Generation Collapse: Flattened Distribution
+Look at the Entropy values.
 
-[1] [https://arxiv.org](https://arxiv.org/abs/2603.10145)
-[2] [https://arxiv.org](https://arxiv.org/html/2602.21224v1)
-[3] [https://www.geeksforgeeks.org](https://www.geeksforgeeks.org/machine-learning/ml-common-loss-functions/)
-[4] [https://marcossilva.github.io](https://marcossilva.github.io/en/2019/07/29/coursera-deep-learning-module-2-week-3.html)
-[5] [https://medium.com](https://medium.com/@adnanmasood/ai-interview-mastery-series-day-0-building-the-bedrock-core-mathematics-ml-theory-for-bb83340441f8)
+* Teacher Entropy (2.79) vs. Student Entropy (2.35): The student's entropy is noticeably lower. Lower entropy means the student's probability distribution is sharper and more confident than the teacher's.
+* The Min/Max Shift: The teacher’s max logit is 5.43, while the student’s max logit is only -0.18. Because the student's max logit is negative, its highest-probability tokens are not pulling away from the rest of the vocabulary package.
+* The Missing Signal: Your student’s standard deviation (5.77) is compressed compared to the teacher's (6.80). This variance compression means the student is failing to push important tokens (like the correct next words or control tokens) high enough to clear the noise. The decoder reads this flat, suppressed distribution and halts generation.
+
+## 2. Why your KL Divergence is 1275 (The Math Trap)
+Your logit ranges prove that your astronomical KL divergence is an artifact of numerical instability in your loss calculation, rather than a purely physical divergence.
+Look at the minimum logit values:
+
+* Teacher Min: -92.13
+* Student Min: -64.04
+
+When logits drop to -92, e⁻⁹² is roughly 10⁻⁴⁰. In standard 16-bit or 32-bit floating-point math (float16 or float32), any value below a certain threshold underflows and gets rounded to a hard 0.0.
+If your script calculates KL divergence manually using standard probabilities (p * torch.log(p / q)), you are dividing a tiny teacher probability (e.g., 10⁻⁴⁰) by a student probability that rounded to absolute 0.0 (because its min was only -64, causing a different underflow floor). Dividing by zero inside a logarithm instantly breaks the tensor math, inflating your batch average to 1275.94.
+
+
+Your new metrics reveal that the compressor is causing a subtle but fatal structural distortion in the latent space.
+Your cosine similarity of 0.929 is incredibly high for a compression task, proving that the semantic "direction" of your student states matches the teacher beautifully. However, the raw magnitude numbers (which seem to be the mean vector magnitudes or a specific norm metric) show that the student vectors are slightly compressed.
+Because transformers are hypersensitive to scale, that tiny difference is causing LayerNorm saturation and attention flattening further down the decoder pipeline. Here is exactly why this happens and how to resolve it:
+## 1. The Cosine Similarity Deception
+A cosine similarity of 0.93 means your compressor successfully captures the contextual meaning of the tokens. However, cosine similarity entirely ignores the lengths (norms) of the vectors. [1, 2, 3] 
+
+* Imagine two vectors pointing in the exact same direction, but one is shorter than the other.
+* In a transformer decoder, a shorter hidden state vector interacts differently with the layer normalization scale ($\gamma$) and the attention dot-products ($Q K^T / \sqrt{d_k}$).
+* Shorter vectors result in smaller dot-product values, which flattens the attention weights. The decoder essentially "loses focus" on which tokens are important.
+
+## 2. How LayerNorm Turns Tiny Norm Errors Into Flat Logits
+Most transformer architectures apply LayerNorm or RMSNorm at the start and end of every block.
+
+* If your student norm is slightly lower (-9.81 vs -10.40), the layer normalization step will scale up the vector to compensate for the lower variance.
+* This scaling amplifies the tiny errors and background noise introduced by your compressor.
+* By the time these noisy, amplified states hit the final linear projection layer (LM Head), the distinct differences between tokens are washed out. This directly causes the compressed logit variance (5.77 instead of 6.80) and the negative logit shift you observed earlier.
+
