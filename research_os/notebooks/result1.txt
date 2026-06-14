@@ -1036,7 +1036,7 @@ hidden: torch.Size([1, 256, 768]) compressed: torch.Size([1, 128, 768])
 Today tested generation the top token agreement was 59 percent.
 The autoregressive generation is collapsing but hidden state mse is 0.02.
 Today compared the compressed hidden states and encoder hidden states 
-the results
+the results(THESE RESULTS ARE ON A SINGLE RUN NOT AVERAGE OVER MULTIPLE)
 hidden mean: 0.00789443589746952 hidden std : 0.14428803324699402 
 compressed mean: -0.0011648358777165413 compressed std : 1.0062857866287231
 
@@ -1074,3 +1074,28 @@ student mean and std :  -20.45339012145996     5.772799015045166
 teacher norm -10.406413078308105 
 student norm - 9.813036918640137 
 cosine similarity - 0.9292904734611511
+
+
+############################################################################################
+KL HYBIRD LOSS TRAINING FOR 5K STEPS
+TEMPERATURE = 2
+THESE ARE CALCULATED OVER 100 STEPS and AVERAGED. 
+
+Resulting metrics
+
+hidden_mse                0.0159
+cosine                    0.9519
+teacher_norm              11.0865
+student_norm              10.7233
+top1                      0.5777  
+top5                      0.7016  # this is top 5 comparing all top 5 sample of students 
+and teachers earlier top 5 agreement was that #1 token of teacher is in top 5 of student chances.
+
+top5_overlap              0.5717
+kl                        437.7333
+teacher_entropy           3.3713
+student_entropy           3.8654
+teacher_logit_mean        -19.5480
+teacher_logit_std         6.7798
+student_logit_mean        -19.8281
+student_logit_std         6.0001
