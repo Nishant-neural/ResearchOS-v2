@@ -1112,3 +1112,26 @@ A MAJOR MISTAKE TRAINED ON AG NEWS DATAST WHICH HAVELESS THAN 256 SEQUENCES MEAN
  TRAINED TO 2K STEPS -  KL IS NEAR 3.6 K AND MSE IS STILL 0.05
  AT 3K STEPS - KL IS NEAR 2.7 K AND MSE IS STILL 0.05 APPROX
  at 4.6 k steps kl is near 2.2k and ms still 0.05
+kl and mse plateued here 
+
+
+########################################################
+trained compressor real perceiver block with ffn and normalization and self attention depth = 2
+result
+ loss=2098.3335 kl=2061.6172 mse=0.0367: 100%  6250/6250
+  [1:48:56<00:00,  1.05s/it] Epoch 1: 2327.8365
+  loss=2412.7686 kl=2373.0205 mse=0.0397: 100%  6250/6250 [1:49:43<00:00,  1.05s/it] Epoch 2: 2209.2923
+  loss=2291.4858 kl=2254.2896 mse=0.0372:  18%  1134/6250 [19:54<1:30:25,  1.06s/it]
+  still kl plateued at same place.
+
+  ############################################################
+  at num latents of 192
+still capped at 2.2k approx kl
+  loss=2347.9490 kl=2307.4863 mse=0.0405: 100%
+ 6250/6250 [1:44:55<00:00,  1.01s/it]
+
+loss=2357.4585 kl=2316.2588 mse=0.0412:  55%
+ 3413/6250 [56:49<48:18,  1.02s/it]
+
+
+at this point compresser std and teacher std and norm are evry near to each other
